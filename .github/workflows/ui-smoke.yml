@@ -1,0 +1,118 @@
+name: UI Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        default: stage
+        type: choice
+        options:
+          - stage
+          - dev
+
+jobs:
+  ui-smoke:
+    name: UI Smoke (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate secrets
+        env:
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+        run: |
+          missing=0
+          if [ -z "$TEST_USER_EMAIL" ]; then
+            echo "::error::GitHub secret TEST_USER_EMAIL is not configured."
+            echo "Add it under Settings → Secrets and variables → Actions."
+            missing=1
+          fi
+          if [ -z "$TEST_USER_PASSWORD" ]; then
+            echo "::error::GitHub secret TEST_USER_PASSWORD is not configured."
+            echo "Add it under Settings → Secrets and variables → Actions."
+            missing=1
+          fi
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+          echo "Secrets validation passed."
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Install Playwright browsers
+        run: mvn exec:java -e -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args="install --with-deps chromium"
+
+      - name: Run UI smoke tests
+        env:
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+        run: mvn test -Pui-smoke -Denv=${{ inputs.environment }} -B
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-smoke-allure-results-${{ inputs.environment }}
+          path: target/allure-results
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Upload Surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-smoke-surefire-reports-${{ inputs.environment }}
+          path: target/surefire-reports
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Upload Playwright traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-smoke-traces-${{ inputs.environment }}
+          path: target/traces
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-smoke-screenshots-${{ inputs.environment }}
+          path: |
+            target/screenshots
+            target/test-output
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Upload videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-smoke-videos-${{ inputs.environment }}
+          path: |
+            target/videos
+            test-results
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-smoke-logs-${{ inputs.environment }}
+          path: target/logs
+          retention-days: 7
+          if-no-files-found: warn

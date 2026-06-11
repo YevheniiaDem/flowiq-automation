@@ -153,24 +153,94 @@ Environment is resolved in order: `-Denv` → `ENV` env var → `local`.
 
 | Group | Description |
 |-------|-------------|
+| `unit` | Framework unit tests (CI build gate; add tests with `@Test(groups = "unit")`) |
 | `smoke` | Critical path smoke tests |
 | `api` | API test suite |
 | `ui` | UI test suite |
-| `auth` | Authentication tests |
+| `regression` | API regression tests |
+| `e2e` | End-to-end UI flows |
+| `integration` | Database / Testcontainers tests |
 
 ## CI/CD (GitHub Actions)
 
-Workflow: `.github/workflows/ci.yml`
+Smoke and UI tests **do not run automatically against `localhost`** on push.  
+Live tests run manually or on a nightly schedule against **stage/dev** with GitHub Secrets.
 
-- Runs on push/PR to `main` and `develop`
-- Supports manual dispatch with environment and suite selection
-- Uploads Allure results and logs as artifacts
+### Workflows
 
-Required GitHub Secrets (for dev/stage):
+| Workflow | Trigger | Purpose | Maven command |
+|----------|---------|---------|---------------|
+| **CI** (`ci.yml`) | `push`, `pull_request` → `main`, `develop` | Compile + unit gate only | `mvn clean compile` then `mvn test -Dgroups=unit` |
+| **API Smoke** (`api-smoke.yml`) | Manual (`workflow_dispatch`) | API smoke against live env | `mvn test -Papi-smoke -Denv=stage` |
+| **UI Smoke** (`ui-smoke.yml`) | Manual (`workflow_dispatch`) | Playwright UI smoke | `mvn test -Pui-smoke -Denv=stage` |
+| **Nightly Regression** (`nightly-regression.yml`) | Cron `0 3 * * *` + manual | Full regression suite | `mvn test -Pregression -Denv=stage` |
 
-- `TEST_USER_EMAIL`
-- `TEST_USER_PASSWORD`
-- `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` (when DB tests are added)
+Nightly regression uses `continue-on-error: true` — failures are reported but do not block day-to-day development.
+
+### Manual run (GitHub UI)
+
+1. Open **Actions** in the repository.
+2. Select **API Smoke**, **UI Smoke**, or **Nightly Regression**.
+3. Click **Run workflow**.
+4. Choose environment: `stage` (default) or `dev`.
+5. Download artifacts: `allure-results`, `surefire-reports` (and Playwright traces for UI).
+
+### Required GitHub Secrets
+
+Configure under **Settings → Secrets and variables → Actions**:
+
+| Secret | Used by |
+|--------|---------|
+| `TEST_USER_EMAIL` | API Smoke, UI Smoke, Nightly Regression |
+| `TEST_USER_PASSWORD` | API Smoke, UI Smoke, Nightly Regression |
+
+If secrets are missing, workflows exit early with a clear message (no stacktrace).
+
+Optional (for future DB integration in CI):
+
+- `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`
+
+### Maven profiles
+
+| Profile | Description |
+|---------|-------------|
+| `local` | Local URLs (`localhost:3000` / `localhost:8080`) |
+| `dev` | Dev environment properties + secrets |
+| `stage` | Stage URLs (`flowiq.vercel.app` / `api.flowiq.ai`) |
+| `unit` | Auto-activated by `-Dgroups=unit` → `unit-suite.xml` |
+| `api-smoke` | `api-smoke-suite.xml` |
+| `ui-smoke` | `ui-smoke-suite.xml` |
+| `regression` | `regression-suite.xml` (smoke + API regression) |
+| `ui-headed` | Visible Chrome for local UI debugging |
+
+### Local commands (live environments)
+
+```bash
+# API smoke against stage (set env vars or use secrets locally)
+export TEST_USER_EMAIL=your@email.com
+export TEST_USER_PASSWORD=yourpassword
+mvn test -Papi-smoke -Denv=stage
+
+# UI smoke against stage (install Playwright first)
+mvn test -Pui-smoke -Denv=stage
+
+# Full regression locally
+mvn test -Pregression -Denv=stage
+
+# CI-equivalent build gate
+mvn clean compile
+mvn test -Dgroups=unit
+```
+
+### Local commands (localhost)
+
+Requires running frontend (`:3000`) and backend (`:8080`):
+
+```bash
+mvn test -Plocal -Papi-smoke
+mvn test -Plocal -Pui-smoke
+mvn test -Pui-headed          # visible Chrome
+```
 
 ## Framework Components
 

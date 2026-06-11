@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!--
+  CI build gate: runs TestNG group "unit" only.
+  Add @Test(groups = "unit") to framework unit tests when they are introduced.
+-->
+<suite name="Flowiq Unit Suite" parallel="false" verbose="1">
+    <test name="Unit Tests">
+        <groups>
+            <run>
+                <include name="unit"/>
+            </run>
+        </groups>
+    </test>
+</suite>
