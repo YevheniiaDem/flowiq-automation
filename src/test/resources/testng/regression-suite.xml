@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Flowiq Full Regression Suite" parallel="false" verbose="1">
+    <listeners>
+        <listener class-name="com.flowiq.listeners.AllureListener"/>
+        <listener class-name="com.flowiq.listeners.TestExecutionListener"/>
+    </listeners>
+
+    <test name="Smoke Tests">
+        <groups>
+            <run>
+                <include name="smoke"/>
+            </run>
+        </groups>
+        <packages>
+            <package name="com.flowiq.api.*"/>
+            <package name="com.flowiq.ui.*"/>
+        </packages>
+    </test>
+
+    <test name="API Regression Tests">
+        <groups>
+            <run>
+                <include name="regression"/>
+                <include name="api"/>
+            </run>
+        </groups>
+        <packages>
+            <package name="com.flowiq.api.*"/>
+        </packages>
+    </test>
+</suite>

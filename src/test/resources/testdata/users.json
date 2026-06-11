@@ -1,0 +1,12 @@
+[
+  {
+    "email": "admin@flowiq.test",
+    "password": "AdminPassword123!",
+    "role": "ADMIN"
+  },
+  {
+    "email": "analyst@flowiq.test",
+    "password": "AnalystPassword123!",
+    "role": "ANALYST"
+  }
+]

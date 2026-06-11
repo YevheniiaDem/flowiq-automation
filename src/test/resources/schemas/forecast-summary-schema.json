@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["expectedRevenue", "expectedExpenses", "expectedProfit"],
+  "properties": {
+    "expectedRevenue": { "type": "number" },
+    "expectedExpenses": { "type": "number" },
+    "expectedProfit": { "type": "number" },
+    "expectedTax": { "type": "number" },
+    "insights": { "type": "array" },
+    "warnings": { "type": "array" }
+  },
+  "additionalProperties": true
+}
