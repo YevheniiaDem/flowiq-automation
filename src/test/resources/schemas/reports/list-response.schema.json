@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReportListResponse",
+  "type": "object",
+  "required": ["reports"],
+  "properties": {
+    "reports": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/reportJob" }
+    },
+    "stats": {
+      "type": ["object", "null"],
+      "properties": {
+        "totalReports": { "type": "integer" },
+        "completedReports": { "type": "integer" },
+        "pendingReports": { "type": "integer" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "definitions": {
+    "reportJob": {
+      "type": "object",
+      "required": ["id", "status"],
+      "properties": {
+        "id": { "type": "integer" },
+        "reportType": { "type": ["string", "null"] },
+        "format": { "type": ["string", "null"] },
+        "status": { "type": "string" },
+        "fileName": { "type": ["string", "null"] },
+        "fileSize": { "type": ["integer", "null"] },
+        "periodFrom": { "type": ["string", "null"] },
+        "periodTo": { "type": ["string", "null"] },
+        "createdAt": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

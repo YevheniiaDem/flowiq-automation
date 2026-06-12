@@ -1,0 +1,43 @@
+name: Validate test secrets
+description: Ensures required GitHub Secrets are configured before live API/UI runs
+
+inputs:
+  require-email:
+    description: Validate TEST_USER_EMAIL
+    required: false
+    default: 'true'
+  require-password:
+    description: Validate TEST_USER_PASSWORD
+    required: false
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - name: Check secrets
+      shell: bash
+      env:
+        REQUIRE_EMAIL: ${{ inputs.require-email }}
+        REQUIRE_PASSWORD: ${{ inputs.require-password }}
+        TEST_USER_EMAIL: ${{ env.TEST_USER_EMAIL }}
+        TEST_USER_PASSWORD: ${{ env.TEST_USER_PASSWORD }}
+      run: |
+        set -euo pipefail
+        missing=0
+
+        if [ "$REQUIRE_EMAIL" = "true" ] && [ -z "${TEST_USER_EMAIL:-}" ]; then
+          echo "::error::GitHub secret TEST_USER_EMAIL is not configured."
+          missing=1
+        fi
+
+        if [ "$REQUIRE_PASSWORD" = "true" ] && [ -z "${TEST_USER_PASSWORD:-}" ]; then
+          echo "::error::GitHub secret TEST_USER_PASSWORD is not configured."
+          missing=1
+        fi
+
+        if [ "$missing" -ne 0 ]; then
+          echo "Configure secrets under Settings → Secrets and variables → Actions."
+          exit 1
+        fi
+
+        echo "Secrets validation passed."

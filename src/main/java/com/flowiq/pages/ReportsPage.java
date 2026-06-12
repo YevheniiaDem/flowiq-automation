@@ -43,4 +43,20 @@ public class ReportsPage extends BasePage {
     submitGenerateDialog();
     return this;
   }
+
+  public Locator historyTable() {
+    return page.locator("table").first();
+  }
+
+  public Locator historyRows() {
+    return historyTable().locator("tbody tr");
+  }
+
+  public int getHistoryRowCount() {
+    return historyRows().count();
+  }
+
+  public void waitForHistoryLoaded() {
+    waitForVisible(historyTable());
+  }
 }

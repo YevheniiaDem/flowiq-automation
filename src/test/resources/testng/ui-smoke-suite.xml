@@ -9,12 +9,11 @@
     <test name="UI Smoke Tests">
         <groups>
             <run>
-                <include name="smoke"/>
-                <include name="ui"/>
+                <include name="ui-smoke"/>
             </run>
         </groups>
         <packages>
-            <package name="com.flowiq.ui.*"/>
+            <package name="com.flowiq.ui.smoke"/>
         </packages>
     </test>
 </suite>

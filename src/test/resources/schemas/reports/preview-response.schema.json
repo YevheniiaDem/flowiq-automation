@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReportPreviewResponse",
+  "type": "object",
+  "required": ["revenue", "expenses", "profit"],
+  "properties": {
+    "revenue": { "type": "number" },
+    "expenses": { "type": "number" },
+    "profit": { "type": "number" },
+    "taxBurden": { "type": ["number", "null"] },
+    "chartData": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "object",
+        "required": ["month", "amount"],
+        "properties": {
+          "month": { "type": "string" },
+          "amount": { "type": "number" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

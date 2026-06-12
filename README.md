@@ -160,6 +160,77 @@ Environment is resolved in order: `-Denv` → `ENV` env var → `local`.
 | `regression` | API regression tests |
 | `e2e` | End-to-end UI flows |
 | `integration` | Database / Testcontainers tests |
+| `contract` | API contract / JSON Schema tests |
+| `api-integration` | Full API business lifecycle integration tests |
+| `api-regression` | Comprehensive API regression tests (`com.flowiq.api.regression`) |
+| `ui-smoke` | Production UI smoke tests (Page Objects) |
+
+## Contract Testing
+
+Validates live API responses against JSON Schema (no mocks). See [docs/CONTRACT-COVERAGE.md](docs/CONTRACT-COVERAGE.md).
+
+```bash
+# All contract tests (requires running backend)
+mvn test -Pcontract -Plocal
+
+# Stage environment
+mvn test -Pcontract -Pstage
+```
+
+Components:
+
+| Component | Location |
+|-----------|----------|
+| Contract tests | `src/test/java/com/flowiq/contracts/` |
+| JSON Schemas | `src/test/resources/schemas/{domain}/` |
+| `ContractAssertions` | `com.flowiq.contracts.ContractAssertions` |
+| Suite | `contract-suite.xml` |
+
+## API Integration Testing
+
+Full business entity lifecycle tests (CRUD, filters, auth, validation). See [docs/INTEGRATION-COVERAGE.md](docs/INTEGRATION-COVERAGE.md).
+
+```bash
+# All integration tests (requires running backend)
+mvn test -Papi-integration -Plocal
+
+# Stage
+mvn test -Papi-integration -Pstage
+```
+
+Components:
+
+| Component | Location |
+|-----------|----------|
+| Integration tests | `src/test/java/com/flowiq/api/integration/` |
+| `IntegrationAssertions` | `com.flowiq.api.integration.support.IntegrationAssertions` |
+| DB consistency tests | `*IntegrationDbTest` (Testcontainers) |
+| Suite | `api-integration-suite.xml` |
+
+## UI Smoke Testing
+
+Page Object–based smoke tests for all main user flows. See [docs/UI-SMOKE-STABILITY.md](docs/UI-SMOKE-STABILITY.md).
+
+```bash
+# Full UI smoke (frontend + backend required)
+mvn test -Pui-smoke -Plocal
+
+# Visible browser for debugging
+mvn test -Pui-headed -Dtest=LoginSmokeTest
+```
+
+On failure: full-page screenshot, Playwright trace (`target/traces/`), and video (`target/videos/`) are attached to Allure.
+
+## API Regression Testing
+
+Comprehensive API regression (269+ tests) via Service Layer only. See [docs/API-REGRESSION-COVERAGE.md](docs/API-REGRESSION-COVERAGE.md).
+
+```bash
+mvn test -Papi-regression -Plocal
+mvn test -Papi-regression -Pstage
+```
+
+Package: `com.flowiq.api.regression` | Suite: `regression-api-suite.xml`
 
 ## CI/CD (GitHub Actions)
 
@@ -210,6 +281,9 @@ Optional (for future DB integration in CI):
 | `unit` | Auto-activated by `-Dgroups=unit` → `unit-suite.xml` |
 | `api-smoke` | `api-smoke-suite.xml` |
 | `ui-smoke` | `ui-smoke-suite.xml` |
+| `contract` | `contract-suite.xml` (API JSON Schema contracts) |
+| `api-regression` | `regression-api-suite.xml` (269+ API regression tests) |
+| `api-integration` | `api-integration-suite.xml` (full API lifecycle) |
 | `regression` | `regression-suite.xml` (smoke + API regression) |
 | `ui-headed` | Visible Chrome for local UI debugging |
 

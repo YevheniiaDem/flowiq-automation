@@ -45,6 +45,11 @@ public class NotificationService extends BaseApiService {
         return put(ApiEndpoints.NOTIFICATIONS_READ_ALL).getRaw().jsonPath().getInt("updated");
     }
 
+    @Step("Attempt mark all notifications as read (unchecked)")
+    public ApiCallResult<Void> attemptMarkAllAsRead() {
+        return attemptPut(ApiEndpoints.NOTIFICATIONS_READ_ALL, Void.class);
+    }
+
     @Step("Delete notification {id}")
     public void deleteById(long id) {
         deleteNoContent(ApiEndpoints.NOTIFICATION_BY_ID.replace("{id}", String.valueOf(id)));
@@ -63,5 +68,31 @@ public class NotificationService extends BaseApiService {
     @Step("Fetch notifications without authentication")
     public ApiCallResult<NotificationPageResponse> fetchListUnauthorized() {
         return fetchUnauthenticated(ApiEndpoints.NOTIFICATIONS, Map.of("page", 0, "size", 20), NotificationPageResponse.class);
+    }
+
+    @Step("Fetch notifications summary (unchecked)")
+    public ApiCallResult<NotificationSummaryResponse> fetchSummary() {
+        return fetch(ApiEndpoints.NOTIFICATIONS_SUMMARY, NotificationSummaryResponse.class);
+    }
+
+    @Step("Fetch notifications summary without authentication")
+    public ApiCallResult<NotificationSummaryResponse> fetchSummaryUnauthorized() {
+        return fetchUnauthenticated(ApiEndpoints.NOTIFICATIONS_SUMMARY, NotificationSummaryResponse.class);
+    }
+
+    @Step("Fetch unread count without authentication")
+    public ApiCallResult<Void> fetchUnreadCountUnauthorized() {
+        return ApiCallResult.from(getUnauthenticated(ApiEndpoints.NOTIFICATIONS_UNREAD_COUNT));
+    }
+
+    @Step("Attempt mark notification {id} as read")
+    public ApiCallResult<Void> attemptMarkAsRead(long id) {
+        return attemptPut(ApiEndpoints.NOTIFICATION_READ.replace("{id}", String.valueOf(id)),
+                new MarkNotificationReadRequest(), Void.class);
+    }
+
+    @Step("Attempt delete notification {id}")
+    public ApiCallResult<Void> attemptDeleteById(long id) {
+        return super.attemptDelete(ApiEndpoints.NOTIFICATION_BY_ID.replace("{id}", String.valueOf(id)));
     }
 }

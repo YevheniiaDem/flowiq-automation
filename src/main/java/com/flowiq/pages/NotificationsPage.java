@@ -57,4 +57,20 @@ public class NotificationsPage extends BasePage {
   public boolean isEmpty() {
     return list().locator("p.text-muted-foreground").isVisible();
   }
+
+  public Locator unreadCards() {
+    return list().locator(".shadow-sm");
+  }
+
+  public NotificationsPage markFirstUnreadAsRead() {
+    Locator unread = unreadCards().first();
+    if (unread.isVisible()) {
+      unread.click();
+    }
+    return this;
+  }
+
+  public int getUnreadCardCount() {
+    return unreadCards().count();
+  }
 }

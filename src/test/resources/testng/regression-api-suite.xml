@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Flowiq API Regression Suite" parallel="false" verbose="1">
+    <listeners>
+        <listener class-name="com.flowiq.listeners.AllureListener"/>
+        <listener class-name="com.flowiq.listeners.TestExecutionListener"/>
+    </listeners>
+
+    <test name="API Regression Tests">
+        <groups>
+            <run>
+                <include name="api-regression"/>
+            </run>
+        </groups>
+        <packages>
+            <package name="com.flowiq.api.regression.auth"/>
+            <package name="com.flowiq.api.regression.transactions"/>
+            <package name="com.flowiq.api.regression.dashboard"/>
+            <package name="com.flowiq.api.regression.analytics"/>
+            <package name="com.flowiq.api.regression.imports"/>
+            <package name="com.flowiq.api.regression.reports"/>
+            <package name="com.flowiq.api.regression.notifications"/>
+            <package name="com.flowiq.api.regression.tasks"/>
+            <package name="com.flowiq.api.regression.forecasts"/>
+            <package name="com.flowiq.api.regression.businessguide"/>
+            <package name="com.flowiq.api.regression.aiaccountant"/>
+        </packages>
+    </test>
+</suite>

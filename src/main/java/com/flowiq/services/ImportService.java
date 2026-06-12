@@ -42,4 +42,9 @@ public class ImportService extends BaseApiService {
     public ApiCallResult<ImportJobResponse> attemptUpload(File file) {
         return ApiCallResult.from(postMultipart(ApiEndpoints.IMPORTS_UPLOAD, file), ImportJobResponse.class);
     }
+
+    @Step("Fetch import job by id {id} (unchecked)")
+    public ApiCallResult<ImportJobResponse> fetchById(long id) {
+        return attemptGet(ApiEndpoints.IMPORT_BY_ID.replace("{id}", String.valueOf(id)), ImportJobResponse.class);
+    }
 }

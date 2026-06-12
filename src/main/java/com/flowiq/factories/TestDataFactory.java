@@ -140,4 +140,15 @@ public final class TestDataFactory {
             throw new IllegalStateException("Failed to create invalid import file", e);
         }
     }
+
+    public static File emptyImportCsv() {
+        try {
+            Path tempFile = Files.createTempFile("flowiq-empty-import-", ".csv");
+            Files.writeString(tempFile, "");
+            tempFile.toFile().deleteOnExit();
+            return tempFile.toFile();
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to create empty import file", e);
+        }
+    }
 }

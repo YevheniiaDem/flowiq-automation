@@ -66,4 +66,24 @@ public class DashboardService extends BaseApiService {
     public ApiCallResult<Void> fetchStats() {
         return fetch(ApiEndpoints.DASHBOARD_STATS, Void.class);
     }
+
+    @Step("Fetch dashboard stats without authentication")
+    public ApiCallResult<Void> fetchStatsUnauthorized() {
+        return fetchUnauthenticated(ApiEndpoints.DASHBOARD_STATS, Void.class);
+    }
+
+    @Step("Fetch dashboard health without authentication")
+    public ApiCallResult<BusinessHealthResponse> fetchHealthUnauthorized() {
+        return fetchUnauthenticated(ApiEndpoints.DASHBOARD_HEALTH, BusinessHealthResponse.class);
+    }
+
+    @Step("Fetch dashboard summary without authentication")
+    public ApiCallResult<AISummaryResponse> fetchSummaryUnauthorized() {
+        return fetchUnauthenticated(ApiEndpoints.DASHBOARD_SUMMARY, AISummaryResponse.class);
+    }
+
+    @Step("Fetch revenue trend without authentication")
+    public ApiCallResult<Void> fetchRevenueTrendUnauthorized() {
+        return fetchUnauthenticated(ApiEndpoints.DASHBOARD_CHARTS_REVENUE_TREND, Void.class);
+    }
 }

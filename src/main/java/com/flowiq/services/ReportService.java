@@ -53,4 +53,24 @@ public class ReportService extends BaseApiService {
     public ApiCallResult<ReportJobResponse> attemptGenerate(GenerateReportRequest request) {
         return attemptPost(ApiEndpoints.REPORTS_GENERATE, request, ReportJobResponse.class);
     }
+
+    @Step("Fetch report preview (unchecked)")
+    public ApiCallResult<ReportPreviewResponse> fetchPreview(Map<String, ?> queryParams) {
+        return fetch(ApiEndpoints.REPORTS_PREVIEW, queryParams, ReportPreviewResponse.class);
+    }
+
+    @Step("Fetch report preview without authentication")
+    public ApiCallResult<ReportPreviewResponse> fetchPreviewUnauthorized(Map<String, ?> queryParams) {
+        return fetchUnauthenticated(ApiEndpoints.REPORTS_PREVIEW, queryParams, ReportPreviewResponse.class);
+    }
+
+    @Step("Attempt download report {id}")
+    public ApiCallResult<Void> attemptDownload(long id) {
+        return ApiCallResult.from(download(id));
+    }
+
+    @Step("Fetch report by id {id} (unchecked)")
+    public ApiCallResult<ReportJobResponse> fetchById(long id) {
+        return attemptGet(ApiEndpoints.REPORT_BY_ID.replace("{id}", String.valueOf(id)), ReportJobResponse.class);
+    }
 }

@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "NotificationPageResponse",
+  "type": "object",
+  "required": ["content", "page", "size", "totalElements", "totalPages"],
+  "properties": {
+    "content": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/notification" }
+    },
+    "page": { "type": "integer", "minimum": 0 },
+    "size": { "type": "integer", "minimum": 1 },
+    "totalElements": { "type": "integer", "minimum": 0 },
+    "totalPages": { "type": "integer", "minimum": 0 }
+  },
+  "definitions": {
+    "notification": {
+      "type": "object",
+      "required": ["id", "title", "message", "type", "severity", "read"],
+      "properties": {
+        "id": { "type": "integer" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["TAX", "FOP_LIMIT", "FINANCIAL", "AI_INSIGHT", "REPORT", "SYSTEM"]
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["INFO", "SUCCESS", "WARNING", "CRITICAL"]
+        },
+        "read": { "type": "boolean" },
+        "actionUrl": { "type": ["string", "null"] },
+        "createdAt": { "type": ["string", "null"] },
+        "readAt": { "type": ["string", "null"] },
+        "expiresAt": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,123 @@
+# Flowiq full stack — postgres, backend, frontend, automation (idle runner)
+# Requires sibling repos: flowiq-backend, flowiq-frontend next to flowiq-automation
+
+name: flowiq
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: flowiq-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-flowiq}
+      POSTGRES_USER: ${POSTGRES_USER:-flowiq}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-flowiq123}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - flowiq-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-flowiq} -d ${POSTGRES_DB:-flowiq}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging: *default-logging
+
+  flowiq-backend:
+    build:
+      context: ../flowiq-backend
+      dockerfile: Dockerfile
+    image: flowiq-backend:local
+    container_name: flowiq-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-flowiq}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-flowiq}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-flowiq123}
+      JWT_SECRET: ${JWT_SECRET:-flowiq-dev-secret-key-change-in-production-min-256-bits-long!!}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    networks:
+      - flowiq-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/api/health > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 90s
+    logging: *default-logging
+
+  flowiq-frontend:
+    build:
+      context: ../flowiq-frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api}
+    image: flowiq-frontend:local
+    container_name: flowiq-frontend
+    restart: unless-stopped
+    depends_on:
+      flowiq-backend:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    networks:
+      - flowiq-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    logging: *default-logging
+
+  automation:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: flowiq-automation:local
+    container_name: flowiq-automation
+    restart: unless-stopped
+    depends_on:
+      flowiq-backend:
+        condition: service_healthy
+      flowiq-frontend:
+        condition: service_healthy
+    environment:
+      TEST_USER_EMAIL: ${TEST_USER_EMAIL:-demo@flowiq.ai}
+      TEST_USER_PASSWORD: ${TEST_USER_PASSWORD:-demo123}
+      MAVEN_OPTS: ${MAVEN_OPTS:--Xmx1024m}
+    volumes:
+      - automation-target:/app/target
+    networks:
+      - flowiq-network
+    command: ["tail", "-f", "/dev/null"]
+    logging: *default-logging
+
+networks:
+  flowiq-network:
+    name: flowiq-network
+    driver: bridge
+
+volumes:
+  postgres-data:
+    name: flowiq-postgres-data
+  automation-target:
+    name: flowiq-automation-target

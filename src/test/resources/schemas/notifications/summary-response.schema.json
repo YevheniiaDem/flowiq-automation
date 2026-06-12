@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "NotificationSummaryResponse",
+  "type": "object",
+  "required": ["total", "unread", "critical", "warnings", "success", "thisMonth"],
+  "properties": {
+    "total": { "type": "integer", "minimum": 0 },
+    "unread": { "type": "integer", "minimum": 0 },
+    "critical": { "type": "integer", "minimum": 0 },
+    "warnings": { "type": "integer", "minimum": 0 },
+    "success": { "type": "integer", "minimum": 0 },
+    "thisMonth": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": true
+}

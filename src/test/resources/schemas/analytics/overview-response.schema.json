@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AnalyticsOverviewResponse",
+  "type": "object",
+  "required": ["revenue", "expenses", "profit"],
+  "properties": {
+    "revenue": { "type": "number" },
+    "expenses": { "type": "number" },
+    "profit": { "type": "number" },
+    "taxBurden": { "type": ["number", "null"] },
+    "revenueChangePercent": { "type": "number" },
+    "expensesChangePercent": { "type": "number" },
+    "profitChangePercent": { "type": "number" },
+    "taxBurdenChangePercent": { "type": "number" }
+  },
+  "additionalProperties": true
+}

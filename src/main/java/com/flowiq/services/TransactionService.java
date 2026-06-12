@@ -71,6 +71,11 @@ public class TransactionService extends BaseApiService {
         return fetchList(Map.of("page", 0, "size", 10));
     }
 
+    @Step("Fetch transaction summary (unchecked)")
+    public ApiCallResult<TransactionSummaryResponse> fetchSummary() {
+        return fetch(ApiEndpoints.TRANSACTIONS_SUMMARY, Map.of(), TransactionSummaryResponse.class);
+    }
+
     @Step("Fetch transactions without authentication")
     public ApiCallResult<TransactionPageResponse> fetchListUnauthorized() {
         return fetchUnauthenticated(ApiEndpoints.TRANSACTIONS, Map.of("page", 0, "size", 10), TransactionPageResponse.class);
@@ -79,5 +84,20 @@ public class TransactionService extends BaseApiService {
     @Step("Attempt create transaction")
     public ApiCallResult<TransactionResponse> attemptCreate(CreateTransactionRequest request) {
         return attemptPost(ApiEndpoints.TRANSACTIONS, request, TransactionResponse.class);
+    }
+
+    @Step("Fetch transaction by id {id} (unchecked)")
+    public ApiCallResult<TransactionResponse> fetchById(long id) {
+        return attemptGet(ApiEndpoints.TRANSACTION_BY_ID.replace("{id}", String.valueOf(id)), TransactionResponse.class);
+    }
+
+    @Step("Attempt update transaction {id}")
+    public ApiCallResult<TransactionResponse> attemptUpdate(long id, UpdateTransactionRequest request) {
+        return attemptPut(ApiEndpoints.TRANSACTION_BY_ID.replace("{id}", String.valueOf(id)), request, TransactionResponse.class);
+    }
+
+    @Step("Attempt delete transaction {id}")
+    public ApiCallResult<Void> attemptDeleteById(long id) {
+        return super.attemptDelete(ApiEndpoints.TRANSACTION_BY_ID.replace("{id}", String.valueOf(id)));
     }
 }

@@ -89,4 +89,29 @@ public class TaskService extends BaseApiService {
     public ApiCallResult<TaskResponse> attemptCreate(CreateTaskRequest request) {
         return attemptPost(ApiEndpoints.TASKS, request, TaskResponse.class);
     }
+
+    @Step("Fetch grouped tasks (unchecked)")
+    public ApiCallResult<TaskListResponse> fetchGrouped() {
+        return fetch(ApiEndpoints.TASKS_GROUPED, TaskListResponse.class);
+    }
+
+    @Step("Fetch grouped tasks without authentication")
+    public ApiCallResult<TaskListResponse> fetchGroupedUnauthorized() {
+        return fetchUnauthenticated(ApiEndpoints.TASKS_GROUPED, TaskListResponse.class);
+    }
+
+    @Step("Attempt update task {id}")
+    public ApiCallResult<TaskResponse> attemptUpdate(long id, UpdateTaskRequest request) {
+        return attemptPut(ApiEndpoints.TASK_BY_ID.replace("{id}", String.valueOf(id)), request, TaskResponse.class);
+    }
+
+    @Step("Attempt complete task {id}")
+    public ApiCallResult<TaskResponse> attemptComplete(long id) {
+        return attemptPut(ApiEndpoints.TASK_COMPLETE.replace("{id}", String.valueOf(id)), TaskResponse.class);
+    }
+
+    @Step("Attempt delete task {id}")
+    public ApiCallResult<Void> attemptDeleteById(long id) {
+        return super.attemptDelete(ApiEndpoints.TASK_BY_ID.replace("{id}", String.valueOf(id)));
+    }
 }

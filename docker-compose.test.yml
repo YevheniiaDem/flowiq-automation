@@ -1,0 +1,26 @@
+# Automation test runner overlay — use with docker-compose.yml
+#
+# Examples:
+#   docker compose -f docker-compose.yml -f docker-compose.test.yml run --rm automation
+#   TEST_PROFILE=contract docker compose -f docker-compose.yml -f docker-compose.test.yml run --rm automation
+
+name: flowiq-test
+
+services:
+  automation:
+    restart: "no"
+    environment:
+      TEST_PROFILE: ${TEST_PROFILE:-api-smoke}
+      TEST_USER_EMAIL: ${TEST_USER_EMAIL:-demo@flowiq.ai}
+      TEST_USER_PASSWORD: ${TEST_USER_PASSWORD:-demo123}
+    command:
+      - /bin/bash
+      - -lc
+      - |
+        set -euo pipefail
+        echo "Running automation profile: $${TEST_PROFILE}"
+        mvn test -P"$${TEST_PROFILE}" -Denv=docker -B
+        mvn allure:report -B || true
+        echo "Tests finished. Artifacts in /app/target (volume: flowiq-automation-target)."
+    volumes:
+      - automation-target:/app/target

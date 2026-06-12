@@ -37,4 +37,24 @@ public class ForecastsPage extends BasePage {
   public void waitForSummaryLoaded() {
     waitForVisible(summaryCards());
   }
+
+  public Locator charts() {
+    return page.locator(".recharts-responsive-container");
+  }
+
+  public int getChartCount() {
+    return charts().count();
+  }
+
+  public Locator warningBanners() {
+    return page.locator(".rounded-xl.border.p-3.backdrop-blur-sm");
+  }
+
+  public boolean hasWarnings() {
+    return warningBanners().count() > 0;
+  }
+
+  public void waitForChartsLoaded() {
+    waitForVisible(charts().first());
+  }
 }

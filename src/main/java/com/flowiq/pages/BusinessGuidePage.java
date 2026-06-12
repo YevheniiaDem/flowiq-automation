@@ -43,4 +43,18 @@ public class BusinessGuidePage extends BasePage {
   public boolean hasSearchResults() {
     return searchResults().isVisible();
   }
+
+  public Locator articleLinks() {
+    return page.locator("a[href*='/business-guide/articles/']");
+  }
+
+  public BusinessGuidePage openFirstArticle() {
+    articleLinks().first().click();
+    waitForDomReady();
+    return this;
+  }
+
+  public boolean isArticleDetailVisible() {
+    return page.locator("article").isVisible();
+  }
 }

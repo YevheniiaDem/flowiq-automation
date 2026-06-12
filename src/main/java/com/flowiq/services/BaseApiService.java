@@ -175,6 +175,26 @@ public abstract class BaseApiService {
         return ApiCallResult.from(post(path, body), bodyType);
     }
 
+    protected <T> ApiCallResult<T> attemptGet(String path, Class<T> bodyType) {
+        return ApiCallResult.from(get(path), bodyType);
+    }
+
+    protected <T> ApiCallResult<T> attemptGet(String path, Map<String, ?> queryParams, Class<T> bodyType) {
+        return ApiCallResult.from(get(path, queryParams), bodyType);
+    }
+
+    protected <T> ApiCallResult<T> attemptPut(String path, Object body, Class<T> bodyType) {
+        return ApiCallResult.from(put(path, body), bodyType);
+    }
+
+    protected <T> ApiCallResult<T> attemptPut(String path, Class<T> bodyType) {
+        return ApiCallResult.from(put(path), bodyType);
+    }
+
+    protected ApiCallResult<Void> attemptDelete(String path) {
+        return ApiCallResult.from(delete(path));
+    }
+
     protected ApiCallResult<Void> attemptPostMultipart(String path, File file) {
         return ApiCallResult.from(postMultipart(path, file));
     }

@@ -60,4 +60,24 @@ public class TasksPage extends BasePage {
   public int getVisibleTaskCount() {
     return taskCards().count();
   }
+
+  public Locator taskDialog() {
+    return page.locator("[role='dialog']");
+  }
+
+  public TasksPage createTask(String title, String description) {
+    clickAddTask();
+    waitForVisible(taskDialog());
+    taskDialog().locator("input").first().fill(title);
+    if (description != null && !description.isBlank()) {
+      taskDialog().locator("input").nth(1).fill(description);
+    }
+    taskDialog().locator("button[type='submit']").click();
+    waitForHidden(taskDialog());
+    return this;
+  }
+
+  public boolean containsTask(String title) {
+    return page.getByText(title).first().isVisible();
+  }
 }

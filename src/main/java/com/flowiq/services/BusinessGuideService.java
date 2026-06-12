@@ -66,4 +66,15 @@ public class BusinessGuideService extends BaseApiService {
     public ApiCallResult<KnowledgeSearchResponseDto> fetchSearchWithoutQuery() {
         return fetch(ApiEndpoints.BUSINESS_GUIDE_SEARCH, Map.of("page", 0, "size", 20), KnowledgeSearchResponseDto.class);
     }
+
+    @Step("Fetch article by slug {slug} (unchecked)")
+    public ApiCallResult<KnowledgeArticleDetailDto> fetchArticleBySlug(String slug) {
+        return attemptGet(ApiEndpoints.BUSINESS_GUIDE_ARTICLE_BY_SLUG.replace("{slug}", slug),
+                KnowledgeArticleDetailDto.class);
+    }
+
+    @Step("Fetch categories without authentication")
+    public ApiCallResult<Void> fetchCategoriesUnauthorized() {
+        return fetchUnauthenticated(ApiEndpoints.BUSINESS_GUIDE_CATEGORIES, Void.class);
+    }
 }

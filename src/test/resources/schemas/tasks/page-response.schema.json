@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TaskPageResponse",
+  "type": "object",
+  "required": ["content", "page", "size", "totalElements", "totalPages"],
+  "properties": {
+    "content": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/task" }
+    },
+    "page": { "type": "integer", "minimum": 0 },
+    "size": { "type": "integer", "minimum": 1 },
+    "totalElements": { "type": "integer", "minimum": 0 },
+    "totalPages": { "type": "integer", "minimum": 0 }
+  },
+  "definitions": {
+    "task": {
+      "type": "object",
+      "required": ["id", "title", "type", "priority", "status"],
+      "properties": {
+        "id": { "type": "integer" },
+        "title": { "type": "string" },
+        "description": { "type": ["string", "null"] },
+        "type": { "type": "string", "enum": ["TAX", "REPORTING", "BUSINESS", "CUSTOM", "SYSTEM"] },
+        "priority": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"] },
+        "status": { "type": "string", "enum": ["TODO", "IN_PROGRESS", "COMPLETED", "OVERDUE"] },
+        "dueDate": { "type": ["string", "null"] },
+        "completedAt": { "type": ["string", "null"] },
+        "createdAt": { "type": ["string", "null"] },
+        "overdue": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

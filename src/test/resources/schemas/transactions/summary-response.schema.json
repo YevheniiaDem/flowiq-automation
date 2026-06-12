@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TransactionSummaryResponse",
+  "type": "object",
+  "required": ["totalRevenue", "totalExpenses", "netProfit", "transactionCount"],
+  "properties": {
+    "totalRevenue": { "type": "number" },
+    "totalExpenses": { "type": "number" },
+    "netProfit": { "type": "number" },
+    "transactionCount": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": true
+}

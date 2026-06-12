@@ -8,6 +8,7 @@ import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.Tracing;
+import com.microsoft.playwright.Video;
 import com.flowiq.utils.UiAttachmentHelper;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,10 +63,19 @@ public final class PlaywrightFactory {
 
         Browser browser = selectBrowser(playwright, browserName).launch(launchOptions);
 
+        Path videoDir = Path.of("target", "videos");
+        try {
+            Files.createDirectories(videoDir);
+        } catch (Exception e) {
+            log.warn("Failed to create video directory {}", videoDir, e);
+        }
+
         Browser.NewContextOptions contextOptions = new Browser.NewContextOptions()
                 .setBaseURL(config.baseUrl())
                 .setViewportSize(1920, 1080)
-                .setIgnoreHTTPSErrors(true);
+                .setIgnoreHTTPSErrors(true)
+                .setRecordVideoDir(videoDir)
+                .setRecordVideoSize(1280, 720);
 
         BrowserContext context = browser.newContext(contextOptions);
         context.setDefaultTimeout(config.uiTimeout());
@@ -95,6 +105,7 @@ public final class PlaywrightFactory {
 
         void close(boolean failed) {
             Path tracePath = null;
+            Video video = page != null ? page.video() : null;
             try {
                 if (context != null) {
                     if (failed) {
@@ -133,8 +144,17 @@ public final class PlaywrightFactory {
                     }
                 }
             }
-            if (tracePath != null) {
-                UiAttachmentHelper.attachTrace(tracePath);
+            if (failed) {
+                if (tracePath != null) {
+                    UiAttachmentHelper.attachTrace(tracePath);
+                }
+                if (video != null) {
+                    try {
+                        UiAttachmentHelper.attachVideo(video.path());
+                    } catch (Exception e) {
+                        log.warn("Failed to attach Playwright video", e);
+                    }
+                }
             }
             log.info("Playwright session closed");
         }

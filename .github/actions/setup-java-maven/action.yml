@@ -1,0 +1,22 @@
+name: Setup Java and Maven cache
+description: Installs Temurin JDK and enables Maven dependency caching
+
+inputs:
+  java-version:
+    description: Java version
+    required: false
+    default: '17'
+  distribution:
+    description: JDK distribution
+    required: false
+    default: temurin
+
+runs:
+  using: composite
+  steps:
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: ${{ inputs.distribution }}
+        cache: maven

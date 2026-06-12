@@ -47,4 +47,20 @@ public final class UiAttachmentHelper {
             log.warn("Failed to attach Playwright trace {}", tracePath, e);
         }
     }
+
+    public static void attachVideo(Path videoPath) {
+        if (videoPath == null || !Files.exists(videoPath)) {
+            return;
+        }
+        try {
+            Allure.addAttachment(
+                    "Playwright video",
+                    "video/webm",
+                    Files.newInputStream(videoPath),
+                    "webm"
+            );
+        } catch (IOException e) {
+            log.warn("Failed to attach Playwright video {}", videoPath, e);
+        }
+    }
 }

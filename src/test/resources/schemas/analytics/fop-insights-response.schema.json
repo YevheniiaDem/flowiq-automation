@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FopInsightsResponse",
+  "type": "object",
+  "required": ["currentFopGroup", "fopGroupNumber", "annualIncome", "incomeLimit"],
+  "properties": {
+    "currentFopGroup": { "type": "string" },
+    "fopGroupNumber": { "type": "integer" },
+    "annualIncome": { "type": "number" },
+    "incomeLimit": { "type": "number" },
+    "incomeLimitUsagePercent": { "type": "number" },
+    "estimatedTaxLoad": { "type": ["number", "null"] },
+    "daysUntilNextTaxPayment": { "type": "integer" },
+    "nextTaxPaymentLabel": { "type": ["string", "null"] },
+    "incomeLimitProgress": { "type": "number" },
+    "topExpenseCategories": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "object",
+        "required": ["category", "amount"],
+        "properties": {
+          "category": { "type": "string" },
+          "amount": { "type": "number" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "taxForecast": { "type": ["number", "null"] }
+  },
+  "additionalProperties": true
+}

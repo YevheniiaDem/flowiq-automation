@@ -63,4 +63,9 @@ public class AnalyticsService extends BaseApiService {
     public ApiCallResult<AnalyticsOverviewResponse> fetchOverview(Map<String, ?> queryParams) {
         return fetch(ApiEndpoints.ANALYTICS_OVERVIEW, queryParams, AnalyticsOverviewResponse.class);
     }
+
+    @Step("Fetch FOP insights (unchecked)")
+    public ApiCallResult<FopInsightsResponse> fetchFopInsights() {
+        return fetch(ApiEndpoints.ANALYTICS_FOP_INSIGHTS, FopInsightsResponse.class);
+    }
 }

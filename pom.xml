@@ -264,9 +264,6 @@
                         <browser>${browser}</browser>
                         <slow.mo>${slow.mo}</slow.mo>
                     </systemPropertyVariables>
-                    <environmentVariables>
-                        <DOCKER_HOST>npipe:////./pipe/dockerDesktopLinuxEngine</DOCKER_HOST>
-                    </environmentVariables>
                 </configuration>
                 <dependencies>
                     <dependency>
@@ -346,6 +343,12 @@
             </properties>
         </profile>
         <profile>
+            <id>docker</id>
+            <properties>
+                <env>docker</env>
+            </properties>
+        </profile>
+        <profile>
             <id>local</id>
             <properties>
                 <env>local</env>
@@ -382,6 +385,12 @@
             </properties>
         </profile>
         <profile>
+            <id>contract</id>
+            <properties>
+                <suite>contract-suite.xml</suite>
+            </properties>
+        </profile>
+        <profile>
             <id>api-smoke</id>
             <properties>
                 <suite>api-smoke-suite.xml</suite>
@@ -390,7 +399,13 @@
         <profile>
             <id>api-regression</id>
             <properties>
-                <suite>api-regression-suite.xml</suite>
+                <suite>regression-api-suite.xml</suite>
+            </properties>
+        </profile>
+        <profile>
+            <id>api-integration</id>
+            <properties>
+                <suite>api-integration-suite.xml</suite>
             </properties>
         </profile>
         <profile>

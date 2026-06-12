@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Flowiq API Integration Suite" parallel="false" verbose="1">
+    <listeners>
+        <listener class-name="com.flowiq.listeners.AllureListener"/>
+        <listener class-name="com.flowiq.listeners.TestExecutionListener"/>
+    </listeners>
+
+    <test name="API Integration Tests">
+        <groups>
+            <run>
+                <include name="api-integration"/>
+            </run>
+        </groups>
+        <packages>
+            <package name="com.flowiq.api.integration.transactions"/>
+            <package name="com.flowiq.api.integration.tasks"/>
+            <package name="com.flowiq.api.integration.notifications"/>
+            <package name="com.flowiq.api.integration.reports"/>
+            <package name="com.flowiq.api.integration.imports"/>
+            <package name="com.flowiq.api.integration.forecasts"/>
+        </packages>
+    </test>
+</suite>

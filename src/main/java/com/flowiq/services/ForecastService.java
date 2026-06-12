@@ -54,4 +54,54 @@ public class ForecastService extends BaseApiService {
     public ApiCallResult<Void> fetchUnknownResource() {
         return ApiCallResult.from(get("/forecasts/unknown-smoke-resource"), Void.class);
     }
+
+    @Step("Fetch revenue forecast (unchecked)")
+    public ApiCallResult<ForecastMetricResponse> fetchRevenue() {
+        return fetch(ApiEndpoints.FORECASTS_REVENUE, ForecastMetricResponse.class);
+    }
+
+    @Step("Fetch expenses forecast (unchecked)")
+    public ApiCallResult<ForecastMetricResponse> fetchExpenses() {
+        return fetch(ApiEndpoints.FORECASTS_EXPENSES, ForecastMetricResponse.class);
+    }
+
+    @Step("Fetch profit forecast (unchecked)")
+    public ApiCallResult<ForecastMetricResponse> fetchProfit() {
+        return fetch(ApiEndpoints.FORECASTS_PROFIT, ForecastMetricResponse.class);
+    }
+
+    @Step("Fetch tax forecast (unchecked)")
+    public ApiCallResult<TaxForecastResponse> fetchTaxes() {
+        return fetch(ApiEndpoints.FORECASTS_TAXES, TaxForecastResponse.class);
+    }
+
+    @Step("Fetch FOP limit forecast (unchecked)")
+    public ApiCallResult<FopLimitForecastResponse> fetchFopLimit() {
+        return fetch(ApiEndpoints.FORECASTS_FOP_LIMIT, FopLimitForecastResponse.class);
+    }
+
+    @Step("Fetch revenue forecast without authentication")
+    public ApiCallResult<ForecastMetricResponse> fetchRevenueUnauthorized() {
+        return fetchUnauthenticated(ApiEndpoints.FORECASTS_REVENUE, ForecastMetricResponse.class);
+    }
+
+    @Step("Fetch expenses forecast without authentication")
+    public ApiCallResult<ForecastMetricResponse> fetchExpensesUnauthorized() {
+        return fetchUnauthenticated(ApiEndpoints.FORECASTS_EXPENSES, ForecastMetricResponse.class);
+    }
+
+    @Step("Fetch profit forecast without authentication")
+    public ApiCallResult<ForecastMetricResponse> fetchProfitUnauthorized() {
+        return fetchUnauthenticated(ApiEndpoints.FORECASTS_PROFIT, ForecastMetricResponse.class);
+    }
+
+    @Step("Fetch tax forecast without authentication")
+    public ApiCallResult<TaxForecastResponse> fetchTaxesUnauthorized() {
+        return fetchUnauthenticated(ApiEndpoints.FORECASTS_TAXES, TaxForecastResponse.class);
+    }
+
+    @Step("Fetch FOP limit forecast without authentication")
+    public ApiCallResult<FopLimitForecastResponse> fetchFopLimitUnauthorized() {
+        return fetchUnauthenticated(ApiEndpoints.FORECASTS_FOP_LIMIT, FopLimitForecastResponse.class);
+    }
 }

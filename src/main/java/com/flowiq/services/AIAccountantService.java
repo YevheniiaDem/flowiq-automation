@@ -61,4 +61,25 @@ public class AIAccountantService extends BaseApiService {
     public ApiCallResult<AIAccountantChatResponse> attemptChat(AIAccountantChatRequest request) {
         return attemptPost(ApiEndpoints.AI_ACCOUNTANT_CHAT, request, AIAccountantChatResponse.class);
     }
+
+    @Step("Fetch AI recommendations (unchecked)")
+    public ApiCallResult<Void> fetchRecommendations() {
+        return fetch(ApiEndpoints.AI_ACCOUNTANT_RECOMMENDATIONS, Void.class);
+    }
+
+    @Step("Fetch AI recommendations without authentication")
+    public ApiCallResult<Void> fetchRecommendationsUnauthorized() {
+        return fetchUnauthenticated(ApiEndpoints.AI_ACCOUNTANT_RECOMMENDATIONS, Void.class);
+    }
+
+    @Step("Fetch AI tax advisor without authentication")
+    public ApiCallResult<TaxAdvisorResponse> fetchTaxAdvisorUnauthorized() {
+        return fetchUnauthenticated(ApiEndpoints.AI_ACCOUNTANT_TAX_ADVISOR, TaxAdvisorResponse.class);
+    }
+
+    @Step("Attempt chat without authentication")
+    public ApiCallResult<AIAccountantChatResponse> attemptChatUnauthorized(AIAccountantChatRequest request) {
+        return ApiCallResult.from(postUnauthenticated(ApiEndpoints.AI_ACCOUNTANT_CHAT, request),
+                AIAccountantChatResponse.class);
+    }
 }

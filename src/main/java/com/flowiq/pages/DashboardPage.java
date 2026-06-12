@@ -37,4 +37,16 @@ public class DashboardPage extends BasePage {
   public void waitForStatsLoaded() {
     waitForVisible(statsGrid());
   }
+
+  public Locator charts() {
+    return page.locator(".recharts-responsive-container");
+  }
+
+  public int getChartCount() {
+    return charts().count();
+  }
+
+  public void waitForChartsLoaded() {
+    waitForVisible(charts().first());
+  }
 }
