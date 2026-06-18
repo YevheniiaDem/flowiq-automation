@@ -1,0 +1,13 @@
+{
+  "uuid": "rc-backend-1",
+  "historyId": "com.flowiq.api.regression.tasks.TasksRegressionTest#shouldCreateTask",
+  "fullName": "com.flowiq.api.regression.tasks.TasksRegressionTest.shouldCreateTask",
+  "name": "shouldCreateTask",
+  "status": "failed",
+  "start": 1710000100000,
+  "stop": 1710000105000,
+  "statusDetails": {
+    "message": "Expected status code 201 but was 500 Internal Server Error",
+    "trace": "java.lang.AssertionError: Expected status code 201 but was 500\n  at com.flowiq.api.regression.tasks.TasksRegressionTest.shouldCreateTask(TasksRegressionTest.java:48)"
+  }
+}

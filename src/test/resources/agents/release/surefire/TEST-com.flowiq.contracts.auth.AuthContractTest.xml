@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.flowiq.contracts.auth.AuthContractTest" tests="2" failures="0" errors="0" skipped="0" time="0.6">
+  <testcase classname="com.flowiq.contracts.auth.AuthContractTest" name="loginResponseMatchesSchema" time="0.3"/>
+  <testcase classname="com.flowiq.contracts.auth.AuthContractTest" name="meResponseMatchesSchema" time="0.3"/>
+</testsuite>

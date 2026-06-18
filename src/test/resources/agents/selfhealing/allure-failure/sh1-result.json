@@ -1,0 +1,13 @@
+{
+  "uuid": "sh-1",
+  "historyId": "com.flowiq.ui.smoke.AIAccountantSmokeTest#shouldSendMessage",
+  "fullName": "com.flowiq.ui.smoke.AIAccountantSmokeTest.shouldSendMessage",
+  "name": "shouldSendMessage",
+  "status": "failed",
+  "start": 1710000000000,
+  "stop": 1710000030000,
+  "statusDetails": {
+    "message": "Timeout 30000ms exceeded waiting for locator(\".old-send-btn\")",
+    "trace": "com.microsoft.playwright.TimeoutError: Timeout 30000ms exceeded\n  waiting for locator(\".old-send-btn\")\n  at com.flowiq.pages.AIAccountantPage.sendButton(AIAccountantPage.java:34)"
+  }
+}

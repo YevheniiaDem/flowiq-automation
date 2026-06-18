@@ -46,10 +46,6 @@ public class ForecastsPage extends BasePage {
     return charts().count();
   }
 
-  public Locator warningBanners() {
-    return page.locator(".rounded-xl.border.p-3.backdrop-blur-sm");
-  }
-
   public boolean hasWarnings() {
     return warningBanners().count() > 0;
   }

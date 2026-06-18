@@ -1,0 +1,13 @@
+{
+  "uuid": "b2",
+  "historyId": "com.flowiq.ui.smoke.ForecastsSmokeTest#shouldShowWarnings",
+  "fullName": "com.flowiq.ui.smoke.ForecastsSmokeTest.shouldShowWarnings",
+  "name": "shouldShowWarnings",
+  "status": "failed",
+  "statusDetails": {
+    "message": "Element not found: locator('.rounded-xl.border')",
+    "trace": "strict mode violation: locator resolved to 0 elements"
+  },
+  "start": 1710086400000,
+  "stop": 1710086405000
+}

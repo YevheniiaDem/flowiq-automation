@@ -1,0 +1,10 @@
+{
+  "workflow": "ui-smoke.yml",
+  "runId": 1042,
+  "conclusion": "failure",
+  "createdAt": "2026-06-16T03:12:00Z",
+  "failedTests": [
+    "com.flowiq.ui.smoke.AIAccountantSmokeTest#shouldSendMessage",
+    "com.flowiq.ui.smoke.ForecastsSmokeTest#shouldShowWarnings"
+  ]
+}

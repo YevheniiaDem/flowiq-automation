@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.flowiq.api.auth.AuthSmokeApiTest" tests="2" failures="1" errors="0" skipped="0" time="0.8">
+  <testcase classname="com.flowiq.api.auth.AuthSmokeApiTest" name="shouldLogin" time="0.3"/>
+  <testcase classname="com.flowiq.api.auth.AuthSmokeApiTest" name="shouldReturnCurrentUser" time="0.5">
+    <failure message="Connection refused to backend" type="java.net.ConnectException">ConnectException</failure>
+  </testcase>
+</testsuite>

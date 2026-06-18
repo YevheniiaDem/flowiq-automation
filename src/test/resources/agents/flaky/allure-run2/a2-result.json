@@ -1,0 +1,13 @@
+{
+  "uuid": "a2",
+  "historyId": "com.flowiq.ui.smoke.AIAccountantSmokeTest#shouldSendMessage",
+  "fullName": "com.flowiq.ui.smoke.AIAccountantSmokeTest.shouldSendMessage",
+  "name": "shouldSendMessage",
+  "status": "failed",
+  "statusDetails": {
+    "message": "Timeout 30000ms exceeded waiting for locator",
+    "trace": "com.microsoft.playwright.TimeoutError: Timeout 30000ms exceeded\n\tat Locator.click"
+  },
+  "start": 1710086400000,
+  "stop": 1710086430000
+}

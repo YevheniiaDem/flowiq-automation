@@ -1,0 +1,13 @@
+{
+  "uuid": "rc-auth-1",
+  "historyId": "com.flowiq.api.regression.auth.AuthRegressionTest#shouldRejectExpiredToken",
+  "fullName": "com.flowiq.api.regression.auth.AuthRegressionTest.shouldRejectExpiredToken",
+  "name": "shouldRejectExpiredToken",
+  "status": "failed",
+  "start": 1710000200000,
+  "stop": 1710000203000,
+  "statusDetails": {
+    "message": "Expected status code 401 Unauthorized but was 403 Forbidden",
+    "trace": "java.lang.AssertionError: JWT expired — status code: 403\n  at com.flowiq.api.regression.auth.AuthRegressionTest.shouldRejectExpiredToken(AuthRegressionTest.java:61)"
+  }
+}

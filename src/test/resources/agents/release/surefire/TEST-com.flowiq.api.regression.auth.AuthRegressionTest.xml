@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.flowiq.api.regression.auth.AuthRegressionTest" tests="3" failures="1" errors="0" skipped="0" time="1.2">
+  <testcase classname="com.flowiq.api.regression.auth.AuthRegressionTest" name="shouldLoginWithValidCredentials" time="0.4"/>
+  <testcase classname="com.flowiq.api.regression.auth.AuthRegressionTest" name="shouldReturnMeForAuthenticatedUser" time="0.3"/>
+  <testcase classname="com.flowiq.api.regression.auth.AuthRegressionTest" name="shouldRejectInvalidPassword" time="0.5">
+    <failure message="Expected 401 but was 500" type="java.lang.AssertionError">AssertionError</failure>
+  </testcase>
+</testsuite>

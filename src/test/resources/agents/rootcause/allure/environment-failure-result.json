@@ -1,0 +1,13 @@
+{
+  "uuid": "rc-env-1",
+  "historyId": "com.flowiq.api.smoke.ImportsSmokeApiTest#shouldListImports",
+  "fullName": "com.flowiq.api.smoke.ImportsSmokeApiTest.shouldListImports",
+  "name": "shouldListImports",
+  "status": "failed",
+  "start": 1710000300000,
+  "stop": 1710000302000,
+  "statusDetails": {
+    "message": "Connection refused: localhost:8080 failed to bind — service not running",
+    "trace": "java.net.ConnectException: Connection refused\n  ApplicationContext failed to start"
+  }
+}

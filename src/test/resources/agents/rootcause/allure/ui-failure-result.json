@@ -1,0 +1,13 @@
+{
+  "uuid": "rc-ui-1",
+  "historyId": "com.flowiq.ui.smoke.ForecastsSmokeTest#shouldShowWarnings",
+  "fullName": "com.flowiq.ui.smoke.ForecastsSmokeTest.shouldShowWarnings",
+  "name": "shouldShowWarnings",
+  "status": "failed",
+  "start": 1710000000000,
+  "stop": 1710000030000,
+  "statusDetails": {
+    "message": "Element not found: strict mode violation waiting for locator(\".forecast-warning\")",
+    "trace": "com.microsoft.playwright.TimeoutError: strict mode violation\n  locator resolved to 0 elements\n  at com.flowiq.pages.ForecastsPage.warningBanner(ForecastsPage.java:22)"
+  }
+}

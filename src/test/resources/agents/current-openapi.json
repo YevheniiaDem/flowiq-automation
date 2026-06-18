@@ -1,0 +1,74 @@
+{
+  "openapi": "3.0.1",
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/tasks": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TaskPage" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password", "rememberMe"],
+        "properties": {
+          "email": { "type": "string" },
+          "password": { "type": "string" },
+          "rememberMe": { "type": "boolean" }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "required": ["token", "user", "expiresAt"],
+        "properties": {
+          "token": { "type": "string" },
+          "user": { "type": "object" },
+          "expiresAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "TaskPage": {
+        "type": "object",
+        "required": ["content"],
+        "properties": {
+          "content": { "type": "array" }
+        }
+      },
+      "TaskPriority": {
+        "type": "string",
+        "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+      }
+    }
+  }
+}

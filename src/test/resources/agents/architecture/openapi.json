@@ -1,0 +1,20 @@
+{
+  "openapi": "3.0.1",
+  "paths": {
+    "/tasks": {
+      "get": {
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/imports/upload": {
+      "post": {
+        "responses": { "201": { "description": "Created" } }
+      }
+    },
+    "/dashboard/summary": {
+      "get": {
+        "responses": { "200": { "description": "OK" } }
+      }
+    }
+  }
+}

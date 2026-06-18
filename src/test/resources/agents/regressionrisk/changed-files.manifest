@@ -1,0 +1,5 @@
+# Simulated release changes for RiskBasedRegressionAgent unit tests
+src/main/java/com/flowiq/tasks/TasksController.java
+src/main/java/com/flowiq/tasks/TasksService.java
+src/main/java/com/flowiq/pages/DashboardPage.java
+src/main/java/com/flowiq/imports/ImportsService.java
