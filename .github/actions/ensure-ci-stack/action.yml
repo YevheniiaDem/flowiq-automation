@@ -1,0 +1,77 @@
+name: Ensure CI stack is reachable
+description: Reuses a healthy running stack or loads pre-built images and starts the stack
+
+inputs:
+  compose-file:
+    required: false
+    default: docker-compose.ci.yml
+  compose-project-name:
+    required: true
+  compose-profiles:
+    required: false
+    default: ''
+  stack-metadata-artifact-name:
+    description: Artifact containing stack.env with GHCR image references
+    required: false
+    default: ''
+  images-artifact-name:
+    description: Fallback tarball artifact from build-environment
+    required: false
+    default: ci-images
+
+runs:
+  using: composite
+  steps:
+    - name: Make CI scripts executable
+      shell: bash
+      run: chmod +x .github/scripts/ci/*.sh
+
+    - name: Try reusing existing stack
+      id: reuse
+      shell: bash
+      env:
+        COMPOSE_FILE: ${{ inputs.compose-file }}
+        COMPOSE_PROJECT_NAME: ${{ inputs.compose-project-name }}
+        COMPOSE_PROFILES: ${{ inputs.compose-profiles }}
+      run: |
+        if .github/scripts/ci/ci-verify-stack.sh; then
+          echo "reuse=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "reuse=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Download stack metadata
+      if: steps.reuse.outputs.reuse != 'true' && inputs.stack-metadata-artifact-name != ''
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.stack-metadata-artifact-name }}
+        path: .
+
+    - name: Download pre-built CI images tarball
+      if: steps.reuse.outputs.reuse != 'true'
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: ${{ inputs.images-artifact-name }}
+        path: .
+
+    - name: Log in to GHCR
+      if: steps.reuse.outputs.reuse != 'true'
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Start stack from cached images
+      if: steps.reuse.outputs.reuse != 'true'
+      shell: bash
+      env:
+        COMPOSE_FILE: ${{ inputs.compose-file }}
+        COMPOSE_PROJECT_NAME: ${{ inputs.compose-project-name }}
+        COMPOSE_PROFILES: ${{ inputs.compose-profiles }}
+        CI_IMAGES_TAR: ci-images.tar
+        STACK_ENV_FILE: stack.env
+        RETRY_MAX_ATTEMPTS: '5'
+        RETRY_DELAY_SECONDS: '15'
+      run: .github/scripts/ci/ci-up-fast.sh

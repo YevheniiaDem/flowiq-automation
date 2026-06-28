@@ -1,0 +1,124 @@
+name: Write CI summary
+description: Writes GitHub Actions job summary with links to every workflow artifact
+
+inputs:
+  artifact-prefix:
+    description: Global artifact prefix used to group nightly artifacts
+    required: false
+    default: ''
+  allure-page-url:
+    description: Published Allure GitHub Pages URL when available
+    required: false
+    default: ''
+  flaky-count:
+    description: Flaky tests detected in this run
+    required: false
+    default: '0'
+  failed-only-count:
+    description: Failed-only (non-flaky) tests in this run
+    required: false
+    default: '0'
+  pipeline-status:
+    description: Overall pipeline status label (passed, failed, partial)
+    required: false
+    default: 'unknown'
+
+runs:
+  using: composite
+  steps:
+    - name: Write artifact summary
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const prefix = '${{ inputs.artifact-prefix }}';
+          const allureUrl = '${{ inputs.allure-page-url }}';
+          const flakyCount = '${{ inputs.flaky-count }}';
+          const failedOnlyCount = '${{ inputs.failed-only-count }}';
+          const pipelineStatus = '${{ inputs.pipeline-status }}';
+          const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+          function formatBytes(bytes) {
+            if (!bytes || bytes <= 0) return '0 B';
+            const units = ['B', 'KB', 'MB', 'GB'];
+            let value = bytes;
+            let unit = 0;
+            while (value >= 1024 && unit < units.length - 1) {
+              value /= 1024;
+              unit += 1;
+            }
+            return `${value.toFixed(unit === 0 ? 0 : 1)} ${units[unit]}`;
+          }
+
+          function categorize(name) {
+            if (name.includes('docker-diagnostics') || name.endsWith('-docker-logs')) return 'Docker diagnostics';
+            if (name.includes('-surefire')) return 'Surefire';
+            if (name.includes('-allure-results')) return 'Allure results';
+            if (name.includes('-allure-report')) return 'Allure report';
+            if (name.includes('-traces')) return 'Playwright traces';
+            if (name.includes('-screenshots')) return 'Screenshots';
+            if (name.includes('-videos')) return 'Videos (failed UI tests)';
+            if (name.includes('-logs')) return 'Test logs';
+            if (name.includes('-flaky-report')) return 'Flaky detection';
+            if (name === 'flaky-test-history') return 'Flaky history';
+            if (name === 'allure-history') return 'Allure history';
+            if (name.startsWith('ci-images-') || name.startsWith('stack-metadata-')) return 'Build metadata';
+            return 'Other';
+          }
+
+          let artifacts = [];
+          let page = 1;
+          while (true) {
+            const { data } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+              per_page: 100,
+              page,
+            });
+            artifacts = artifacts.concat(data.artifacts);
+            if (data.artifacts.length < 100) break;
+            page += 1;
+          }
+
+          artifacts.sort((a, b) => a.name.localeCompare(b.name));
+
+          let md = '## CI Diagnostics Summary\n\n';
+          md += `- **Pipeline:** ${pipelineStatus}\n`;
+          md += `- **Run:** [${context.runId}](${runUrl})\n`;
+          if (allureUrl) {
+            md += `- **Allure report (GitHub Pages):** [Open report](${allureUrl})\n`;
+          }
+          md += `- **Flaky tests:** ${flakyCount} · **Failed-only:** ${failedOnlyCount}\n`;
+          md += '\n';
+          md += 'All downloadable artifacts are **gzip-compressed** (`.tar.gz` inside the GitHub artifact zip). ';
+          md += 'Extract with `tar -xzf <file>.tar.gz`.\n\n';
+
+          if (artifacts.length === 0) {
+            md += '_No artifacts uploaded for this run._\n';
+          } else {
+            md += '### Artifacts\n\n';
+            md += '| Category | Artifact | Size | Download |\n';
+            md += '|----------|----------|------|----------|\n';
+            for (const artifact of artifacts) {
+              if (prefix && !artifact.name.startsWith(prefix) && !['allure-history', 'flaky-test-history'].includes(artifact.name) && !artifact.name.startsWith('ci-images-') && !artifact.name.startsWith('stack-metadata-')) {
+                continue;
+              }
+              const category = categorize(artifact.name);
+              const size = formatBytes(artifact.size_in_bytes);
+              const link = `${runUrl}#artifacts`;
+              md += `| ${category} | \`${artifact.name}\` | ${size} | [Download](${link}) |\n`;
+            }
+            md += '\n';
+            md += `[View all artifacts on this run](${runUrl}#artifacts)\n`;
+          }
+
+          md += '\n### Docker diagnostics bundle\n\n';
+          md += 'Each `*-docker-diagnostics` artifact contains: Compose logs, PostgreSQL/backend/frontend logs, ';
+          md += '`docker ps`, `docker inspect`, `docker images`, `docker stats`, and `compose-ps.txt`.\n\n';
+
+          md += '### UI failure artifacts\n\n';
+          md += '- **Videos** are uploaded only for **failed UI tests** (extracted from Allure failure attachments).\n';
+          md += '- **Traces** and **screenshots** include failure-time Playwright and Allure attachments.\n';
+
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);

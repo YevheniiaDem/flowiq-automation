@@ -1,0 +1,105 @@
+name: Detect flaky tests
+description: Classifies business-test instability from Allure results and historical nightly runs
+
+inputs:
+  artifact-prefix:
+    description: Prefix for nightly Allure result artifacts
+    required: true
+  java-version:
+    description: Java version
+    required: false
+    default: '17'
+  history-retention-days:
+    description: Retention for flaky-test-history artifact
+    required: false
+    default: '90'
+
+outputs:
+  flaky-count:
+    description: Number of flaky tests detected
+    value: ${{ steps.detect.outputs.flaky-count }}
+  failed-only-count:
+    description: Number of failed-only (non-flaky) tests
+    value: ${{ steps.detect.outputs.failed-only-count }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Java and Maven
+      uses: ./.github/actions/setup-java-maven
+      with:
+        java-version: ${{ inputs.java-version }}
+
+    - name: Compile flaky detection
+      shell: bash
+      run: mvn -B -q compile test-compile -DskipTests
+
+    - name: Download Allure results
+      continue-on-error: true
+      uses: actions/download-artifact@v4
+      with:
+        pattern: ${{ inputs.artifact-prefix }}-*-allure-results
+        merge-multiple: true
+        path: allure-input
+
+    - name: Download flaky test history
+      continue-on-error: true
+      uses: actions/download-artifact@v4
+      with:
+        name: flaky-test-history
+        path: flaky-history
+
+    - name: Merge Allure results
+      shell: bash
+      run: |
+        chmod +x .github/scripts/allure/*.sh
+        .github/scripts/allure/allure-merge-results.sh allure-input merged-allure-results
+
+    - name: Run flaky test detection
+      id: detect
+      continue-on-error: true
+      shell: bash
+      env:
+        ALLURE_RESULTS_DIR: merged-allure-results
+        FLAKY_HISTORY_FILE: flaky-history/flaky-test-history.json
+        FLAKY_OUTPUT_DIR: flaky-report
+        GITHUB_RUN_ID: ${{ github.run_id }}
+        GITHUB_WORKFLOW: ${{ github.workflow }}
+      run: |
+        mkdir -p flaky-history flaky-report
+        mvn -B -q exec:java \
+          -Dexec.mainClass=com.flowiq.ci.flaky.CiFlakyTestAnalyzer \
+          -Dexec.cleanupDaemonThreads=false
+        flaky_count="$(grep -o '"flakyCount"[[:space:]]*:[[:space:]]*[0-9]*' flaky-report/flaky-report.json | head -1 | grep -o '[0-9]*$' || echo 0)"
+        failed_only="$(grep -o '"failedOnlyCount"[[:space:]]*:[[:space:]]*[0-9]*' flaky-report/flaky-report.json | head -1 | grep -o '[0-9]*$' || echo 0)"
+        echo "flaky-count=${flaky_count}" >> "$GITHUB_OUTPUT"
+        echo "failed-only-count=${failed_only}" >> "$GITHUB_OUTPUT"
+
+    - name: Compress flaky reports
+      if: always()
+      continue-on-error: true
+      shell: bash
+      run: |
+        chmod +x .github/scripts/ci/*.sh
+        .github/scripts/ci/compress-directory.sh flaky-report flaky-report.tar.gz
+
+    - name: Upload flaky reports
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-prefix }}-flaky-report
+        path: flaky-report.tar.gz
+        retention-days: 30
+        if-no-files-found: warn
+        compression-level: 0
+
+    - name: Upload flaky test history
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v4
+      with:
+        name: flaky-test-history
+        path: flaky-history/flaky-test-history.json
+        retention-days: ${{ inputs.history-retention-days }}
+        if-no-files-found: warn

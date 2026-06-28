@@ -1,0 +1,42 @@
+name: Ephemeral CI stack
+description: Starts PostgreSQL, backend, and frontend in an isolated Docker Compose project with health and seed checks
+
+inputs:
+  compose-file:
+    description: Docker Compose file path
+    required: false
+    default: docker-compose.ci.yml
+  compose-project-name:
+    description: Unique Compose project name for this run
+    required: true
+  backend-context:
+    description: Path to backend build context
+    required: false
+    default: ./flowiq-backend
+  frontend-context:
+    description: Path to frontend build context
+    required: false
+    default: ./flowiq-frontend
+  compose-profiles:
+    description: Optional comma-free profile name (mailhog, minio, redis)
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Make CI scripts executable
+      shell: bash
+      run: chmod +x .github/scripts/ci/*.sh
+
+    - name: Start ephemeral stack
+      shell: bash
+      env:
+        COMPOSE_FILE: ${{ inputs.compose-file }}
+        COMPOSE_PROJECT_NAME: ${{ inputs.compose-project-name }}
+        BACKEND_CONTEXT: ${{ inputs.backend-context }}
+        FRONTEND_CONTEXT: ${{ inputs.frontend-context }}
+        COMPOSE_PROFILES: ${{ inputs.compose-profiles }}
+        RETRY_MAX_ATTEMPTS: '5'
+        RETRY_DELAY_SECONDS: '15'
+      run: .github/scripts/ci/ci-up.sh

@@ -1,0 +1,152 @@
+# Ephemeral CI stack — no persistent volumes, internal Docker network, host port mapping for test runner.
+# Images: resolved via GHCR (ci-{git-sha}) in CI, or built locally via compose build fallback.
+# Requires flowiq-backend/ and flowiq-frontend/ checkouts (or override BACKEND_CONTEXT / FRONTEND_CONTEXT).
+#
+# Usage:
+#   export COMPOSE_PROJECT_NAME=flowiq-ci-local
+#   docker compose -f docker-compose.ci.yml up -d --build
+#   .github/scripts/ci/wait-for-postgres.sh
+#   .github/scripts/ci/wait-for-backend-health.sh
+#   .github/scripts/ci/wait-for-frontend.sh
+#   docker compose -f docker-compose.ci.yml down -v --remove-orphans
+
+name: flowiq-ci
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: "no"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-flowiq}
+      POSTGRES_USER: ${POSTGRES_USER:-flowiq}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-flowiq123}
+    networks:
+      - flowiq-ci-network
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-flowiq} -d ${POSTGRES_DB:-flowiq}"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    logging: *default-logging
+
+  flowiq-backend:
+    image: ${FLOWIQ_BACKEND_IMAGE:-flowiq-backend:ci}
+    build:
+      context: ${BACKEND_CONTEXT:-./flowiq-backend}
+      dockerfile: Dockerfile
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-flowiq}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-flowiq}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-flowiq123}
+      JWT_SECRET: ${JWT_SECRET:-flowiq-dev-secret-key-change-in-production-min-256-bits-long!!}
+    networks:
+      - flowiq-ci-network
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/api/health > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 120s
+    logging: *default-logging
+
+  flowiq-frontend:
+    image: ${FLOWIQ_FRONTEND_IMAGE:-flowiq-frontend:ci}
+    build:
+      context: ${FRONTEND_CONTEXT:-./flowiq-frontend}
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api}
+    restart: "no"
+    depends_on:
+      flowiq-backend:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    networks:
+      - flowiq-ci-network
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 90s
+    logging: *default-logging
+
+  mailhog:
+    profiles: ["mailhog", "optional"]
+    image: mailhog/mailhog:v1.0.1
+    restart: "no"
+    networks:
+      - flowiq-ci-network
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
+    logging: *default-logging
+
+  minio:
+    profiles: ["minio", "optional"]
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    restart: "no"
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-flowiq}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-flowiq123456}
+    networks:
+      - flowiq-ci-network
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+    logging: *default-logging
+
+  redis:
+    profiles: ["redis", "optional"]
+    image: redis:7-alpine
+    restart: "no"
+    networks:
+      - flowiq-ci-network
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    logging: *default-logging
+
+networks:
+  flowiq-ci-network:
+    name: ${COMPOSE_PROJECT_NAME:-flowiq-ci}-network
+    driver: bridge

@@ -1,0 +1,55 @@
+name: Upload Docker diagnostics
+description: Compresses Docker Compose, container, and service logs and uploads as a single artifact
+
+inputs:
+  artifact-name:
+    description: Artifact name for the compressed diagnostics bundle
+    required: true
+  artifacts-dir:
+    description: Directory containing collected Docker diagnostics
+    required: false
+    default: ci-artifacts
+  retention-days:
+    description: Artifact retention in days
+    required: false
+    default: '14'
+  collect-if-missing:
+    description: Run collect-logs.sh when the diagnostics directory is empty
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Ensure Docker diagnostics are collected
+      if: always()
+      shell: bash
+      env:
+        ARTIFACTS_DIR: ${{ inputs.artifacts-dir }}
+        COLLECT_IF_MISSING: ${{ inputs.collect-if-missing }}
+      run: |
+        chmod +x .github/scripts/ci/*.sh
+        if [ "${COLLECT_IF_MISSING}" = "true" ] \
+          || [ ! -d "${ARTIFACTS_DIR}" ] \
+          || [ -z "$(find "${ARTIFACTS_DIR}" -mindepth 1 -print -quit 2>/dev/null)" ]; then
+          .github/scripts/ci/collect-logs.sh
+        fi
+
+    - name: Compress Docker diagnostics
+      if: always()
+      shell: bash
+      env:
+        ARTIFACTS_DIR: ${{ inputs.artifacts-dir }}
+      run: |
+        chmod +x .github/scripts/ci/*.sh
+        .github/scripts/ci/compress-directory.sh "${ARTIFACTS_DIR}" "${ARTIFACTS_DIR}.tar.gz"
+
+    - name: Upload compressed Docker diagnostics
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ${{ inputs.artifacts-dir }}.tar.gz
+        retention-days: ${{ inputs.retention-days }}
+        if-no-files-found: warn
+        compression-level: 0

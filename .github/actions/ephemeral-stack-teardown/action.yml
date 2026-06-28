@@ -1,0 +1,43 @@
+name: Teardown ephemeral CI stack
+description: Collects Docker logs and removes containers, networks, and volumes
+
+inputs:
+  compose-file:
+    description: Docker Compose file path
+    required: false
+    default: docker-compose.ci.yml
+  compose-project-name:
+    description: Compose project name to tear down
+    required: true
+  compose-profiles:
+    description: Optional Compose profile used during startup
+    required: false
+    default: ''
+  artifacts-dir:
+    description: Directory for collected Docker logs
+    required: false
+    default: ci-artifacts
+
+runs:
+  using: composite
+  steps:
+    - name: Collect Docker logs
+      if: always()
+      shell: bash
+      env:
+        COMPOSE_FILE: ${{ inputs.compose-file }}
+        COMPOSE_PROJECT_NAME: ${{ inputs.compose-project-name }}
+        COMPOSE_PROFILES: ${{ inputs.compose-profiles }}
+        ARTIFACTS_DIR: ${{ inputs.artifacts-dir }}
+      run: |
+        chmod +x .github/scripts/ci/*.sh
+        .github/scripts/ci/collect-logs.sh
+
+    - name: Stop containers and remove volumes
+      if: always()
+      shell: bash
+      env:
+        COMPOSE_FILE: ${{ inputs.compose-file }}
+        COMPOSE_PROJECT_NAME: ${{ inputs.compose-project-name }}
+        COMPOSE_PROFILES: ${{ inputs.compose-profiles }}
+      run: .github/scripts/ci/ci-down.sh

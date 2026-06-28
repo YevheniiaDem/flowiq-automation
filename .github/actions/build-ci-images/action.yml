@@ -1,0 +1,167 @@
+name: Build or pull CI Docker images
+description: Pulls immutable GHCR images by git SHA, or builds with docker/build-push-action layer caching
+
+inputs:
+  backend-context:
+    description: Backend Docker build context path
+    required: false
+    default: ./flowiq-backend
+  frontend-context:
+    description: Frontend Docker build context path
+    required: false
+    default: ./flowiq-frontend
+  registry:
+    description: Container registry host
+    required: false
+    default: ghcr.io
+  next-public-api-url:
+    description: Frontend build-time API URL
+    required: false
+    default: http://localhost:8080/api
+
+outputs:
+  backend-image:
+    description: Full GHCR reference for the backend image
+    value: ${{ steps.meta.outputs.backend_image }}
+  frontend-image:
+    description: Full GHCR reference for the frontend image
+    value: ${{ steps.meta.outputs.frontend_image }}
+  backend-sha:
+    description: Git commit SHA used for the backend image tag
+    value: ${{ steps.meta.outputs.backend_sha }}
+  frontend-sha:
+    description: Git commit SHA used for the frontend image tag
+    value: ${{ steps.meta.outputs.frontend_sha }}
+  backend-cache-hit:
+    description: Whether the backend image was pulled without building
+    value: ${{ steps.backend_pull.outputs.cache_hit }}
+  frontend-cache-hit:
+    description: Whether the frontend image was pulled without building
+    value: ${{ steps.frontend_pull.outputs.cache_hit }}
+  build-duration-seconds:
+    description: Seconds spent resolving/building images in this step
+    value: ${{ steps.timer_end.outputs.duration }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ inputs.registry }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Resolve image metadata
+      id: meta
+      shell: bash
+      run: |
+        owner="${GITHUB_REPOSITORY_OWNER,,}"
+        backend_sha="$(git -C "${{ inputs.backend-context }}" rev-parse HEAD)"
+        frontend_sha="$(git -C "${{ inputs.frontend-context }}" rev-parse HEAD)"
+        backend_image="${{ inputs.registry }}/${owner}/flowiq-backend:ci-${backend_sha}"
+        frontend_image="${{ inputs.registry }}/${owner}/flowiq-frontend:ci-${frontend_sha}"
+        backend_cache_ref="${{ inputs.registry }}/${owner}/flowiq-backend:buildcache"
+        frontend_cache_ref="${{ inputs.registry }}/${owner}/flowiq-frontend:buildcache"
+
+        {
+          echo "owner=${owner}"
+          echo "backend_sha=${backend_sha}"
+          echo "frontend_sha=${frontend_sha}"
+          echo "backend_image=${backend_image}"
+          echo "frontend_image=${frontend_image}"
+          echo "backend_cache_ref=${backend_cache_ref}"
+          echo "frontend_cache_ref=${frontend_cache_ref}"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Record build start
+      id: timer_start
+      shell: bash
+      run: echo "start=$(date +%s)" >> "$GITHUB_OUTPUT"
+
+    - name: Try pulling cached backend image
+      id: backend_pull
+      shell: bash
+      run: |
+        if docker pull "${{ steps.meta.outputs.backend_image }}"; then
+          docker tag "${{ steps.meta.outputs.backend_image }}" flowiq-backend:ci
+          echo "cache_hit=true" >> "$GITHUB_OUTPUT"
+          echo "Backend cache hit: ${{ steps.meta.outputs.backend_image }}"
+        else
+          echo "cache_hit=false" >> "$GITHUB_OUTPUT"
+          echo "Backend cache miss — build required."
+        fi
+
+    - name: Build and push backend image
+      if: steps.backend_pull.outputs.cache_hit != 'true'
+      uses: docker/build-push-action@v6
+      with:
+        context: ${{ inputs.backend-context }}
+        push: true
+        load: true
+        tags: |
+          ${{ steps.meta.outputs.backend_image }}
+          ${{ steps.meta.outputs.backend_cache_ref }}
+        cache-from: |
+          type=registry,ref=${{ steps.meta.outputs.backend_cache_ref }}
+          type=gha,scope=flowiq-backend
+        cache-to: |
+          type=registry,ref=${{ steps.meta.outputs.backend_cache_ref }},mode=max
+          type=gha,scope=flowiq-backend,mode=max
+
+    - name: Tag backend locally after build
+      if: steps.backend_pull.outputs.cache_hit != 'true'
+      shell: bash
+      run: docker tag "${{ steps.meta.outputs.backend_image }}" flowiq-backend:ci
+
+    - name: Try pulling cached frontend image
+      id: frontend_pull
+      shell: bash
+      run: |
+        if docker pull "${{ steps.meta.outputs.frontend_image }}"; then
+          docker tag "${{ steps.meta.outputs.frontend_image }}" flowiq-frontend:ci
+          echo "cache_hit=true" >> "$GITHUB_OUTPUT"
+          echo "Frontend cache hit: ${{ steps.meta.outputs.frontend_image }}"
+        else
+          echo "cache_hit=false" >> "$GITHUB_OUTPUT"
+          echo "Frontend cache miss — build required."
+        fi
+
+    - name: Build and push frontend image
+      if: steps.frontend_pull.outputs.cache_hit != 'true'
+      uses: docker/build-push-action@v6
+      with:
+        context: ${{ inputs.frontend-context }}
+        push: true
+        load: true
+        tags: |
+          ${{ steps.meta.outputs.frontend_image }}
+          ${{ steps.meta.outputs.frontend_cache_ref }}
+        build-args: |
+          NEXT_PUBLIC_API_URL=${{ inputs.next-public-api-url }}
+        cache-from: |
+          type=registry,ref=${{ steps.meta.outputs.frontend_cache_ref }}
+          type=gha,scope=flowiq-frontend
+        cache-to: |
+          type=registry,ref=${{ steps.meta.outputs.frontend_cache_ref }},mode=max
+          type=gha,scope=flowiq-frontend,mode=max
+
+    - name: Tag frontend locally after build
+      if: steps.frontend_pull.outputs.cache_hit != 'true'
+      shell: bash
+      run: docker tag "${{ steps.meta.outputs.frontend_image }}" flowiq-frontend:ci
+
+    - name: Record build duration
+      id: timer_end
+      shell: bash
+      run: |
+        end=$(date +%s)
+        start="${{ steps.timer_start.outputs.start }}"
+        duration=$((end - start))
+        echo "duration=${duration}" >> "$GITHUB_OUTPUT"
+        echo "Image resolve/build duration: ${duration}s"
+        echo "Backend cache hit: ${{ steps.backend_pull.outputs.cache_hit }}"
+        echo "Frontend cache hit: ${{ steps.frontend_pull.outputs.cache_hit }}"

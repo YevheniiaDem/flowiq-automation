@@ -1,5 +1,5 @@
 name: Generate and upload Allure report
-description: Builds Allure HTML report from target/allure-results and uploads artifacts
+description: Builds Allure HTML report from allure-results and uploads artifacts
 
 inputs:
   artifact-prefix:
@@ -13,6 +13,14 @@ inputs:
     description: Maven project directory
     required: false
     default: '.'
+  results-directory:
+    description: Allure results directory
+    required: false
+    default: target/allure-results
+  report-directory:
+    description: Generated Allure HTML report directory
+    required: false
+    default: target/site/allure-maven-plugin
 
 runs:
   using: composite
@@ -20,14 +28,17 @@ runs:
     - name: Generate Allure report
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: mvn allure:report -B
+      run: |
+        mvn allure:report -B \
+          -Dallure.results.directory="${{ inputs.results-directory }}" \
+          -Dproject.build.directory="$(dirname "${{ inputs.results-directory }}")" || true
 
     - name: Upload Allure results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.artifact-prefix }}-allure-results
-        path: ${{ inputs.working-directory }}/target/allure-results
+        path: ${{ inputs.results-directory }}
         retention-days: ${{ inputs.retention-days }}
         if-no-files-found: warn
 
@@ -36,6 +47,6 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.artifact-prefix }}-allure-report
-        path: ${{ inputs.working-directory }}/target/site/allure-maven-plugin
+        path: ${{ inputs.report-directory }}
         retention-days: ${{ inputs.retention-days }}
         if-no-files-found: warn

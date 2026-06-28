@@ -1,0 +1,184 @@
+name: Upload suite test artifacts
+description: Stages, compresses, and uploads Surefire, Allure, Playwright, and log artifacts for a CI suite job
+
+inputs:
+  suite-id:
+    description: Short suite identifier used in artifact names
+    required: true
+  target-dir:
+    description: Maven build directory for this suite job
+    required: true
+  artifact-prefix:
+    description: Global artifact prefix for the workflow run
+    required: true
+  retention-days:
+    description: Artifact retention in days
+    required: false
+    default: '30'
+  include-playwright:
+    description: Upload Playwright traces, screenshots, and failed-test videos
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Generate Allure HTML report
+      if: always()
+      shell: bash
+      run: |
+        mvn allure:report -B \
+          -Dallure.results.directory="${{ inputs.target-dir }}/allure-results" \
+          -Dproject.build.directory="${{ inputs.target-dir }}" || true
+
+    - name: Stage suite artifacts
+      if: always()
+      shell: bash
+      env:
+        TARGET_DIR: ${{ inputs.target-dir }}
+        STAGE_DIR: artifact-staging/${{ inputs.suite-id }}
+        INCLUDE_PLAYWRIGHT: ${{ inputs.include-playwright }}
+      run: |
+        chmod +x .github/scripts/ci/*.sh
+        rm -rf "${STAGE_DIR}"
+        .github/scripts/ci/stage-suite-artifacts.sh "${TARGET_DIR}" "${STAGE_DIR}" "${INCLUDE_PLAYWRIGHT}"
+
+    - name: Compress and upload Surefire reports
+      if: always()
+      shell: bash
+      run: |
+        chmod +x .github/scripts/ci/*.sh
+        .github/scripts/ci/compress-directory.sh \
+          "artifact-staging/${{ inputs.suite-id }}/surefire" \
+          "artifact-staging/${{ inputs.suite-id }}/surefire.tar.gz"
+      continue-on-error: true
+
+    - name: Upload Surefire reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-prefix }}-${{ inputs.suite-id }}-surefire
+        path: artifact-staging/${{ inputs.suite-id }}/surefire.tar.gz
+        retention-days: ${{ inputs.retention-days }}
+        if-no-files-found: warn
+        compression-level: 0
+
+    - name: Compress and upload Allure results
+      if: always()
+      shell: bash
+      run: |
+        chmod +x .github/scripts/ci/*.sh
+        .github/scripts/ci/compress-directory.sh \
+          "artifact-staging/${{ inputs.suite-id }}/allure-results" \
+          "artifact-staging/${{ inputs.suite-id }}/allure-results.tar.gz"
+      continue-on-error: true
+
+    - name: Upload Allure results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-prefix }}-${{ inputs.suite-id }}-allure-results
+        path: artifact-staging/${{ inputs.suite-id }}/allure-results.tar.gz
+        retention-days: ${{ inputs.retention-days }}
+        if-no-files-found: warn
+        compression-level: 0
+
+    - name: Compress and upload Allure HTML report
+      if: always()
+      shell: bash
+      run: |
+        chmod +x .github/scripts/ci/*.sh
+        .github/scripts/ci/compress-directory.sh \
+          "artifact-staging/${{ inputs.suite-id }}/allure-report" \
+          "artifact-staging/${{ inputs.suite-id }}/allure-report.tar.gz"
+      continue-on-error: true
+
+    - name: Upload Allure HTML report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-prefix }}-${{ inputs.suite-id }}-allure-report
+        path: artifact-staging/${{ inputs.suite-id }}/allure-report.tar.gz
+        retention-days: ${{ inputs.retention-days }}
+        if-no-files-found: warn
+        compression-level: 0
+
+    - name: Compress and upload Playwright traces
+      if: always() && inputs.include-playwright == 'true'
+      shell: bash
+      run: |
+        chmod +x .github/scripts/ci/*.sh
+        .github/scripts/ci/compress-directory.sh \
+          "artifact-staging/${{ inputs.suite-id }}/traces" \
+          "artifact-staging/${{ inputs.suite-id }}/traces.tar.gz"
+      continue-on-error: true
+
+    - name: Upload Playwright traces
+      if: always() && inputs.include-playwright == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-prefix }}-${{ inputs.suite-id }}-traces
+        path: artifact-staging/${{ inputs.suite-id }}/traces.tar.gz
+        retention-days: ${{ inputs.retention-days }}
+        if-no-files-found: warn
+        compression-level: 0
+
+    - name: Compress and upload screenshots
+      if: always() && inputs.include-playwright == 'true'
+      shell: bash
+      run: |
+        chmod +x .github/scripts/ci/*.sh
+        .github/scripts/ci/compress-directory.sh \
+          "artifact-staging/${{ inputs.suite-id }}/screenshots" \
+          "artifact-staging/${{ inputs.suite-id }}/screenshots.tar.gz"
+      continue-on-error: true
+
+    - name: Upload screenshots
+      if: always() && inputs.include-playwright == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-prefix }}-${{ inputs.suite-id }}-screenshots
+        path: artifact-staging/${{ inputs.suite-id }}/screenshots.tar.gz
+        retention-days: ${{ inputs.retention-days }}
+        if-no-files-found: warn
+        compression-level: 0
+
+    - name: Compress and upload failed-test videos
+      if: always() && inputs.include-playwright == 'true'
+      shell: bash
+      run: |
+        chmod +x .github/scripts/ci/*.sh
+        .github/scripts/ci/compress-directory.sh \
+          "artifact-staging/${{ inputs.suite-id }}/videos" \
+          "artifact-staging/${{ inputs.suite-id }}/videos.tar.gz"
+      continue-on-error: true
+
+    - name: Upload failed-test videos
+      if: always() && inputs.include-playwright == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-prefix }}-${{ inputs.suite-id }}-videos
+        path: artifact-staging/${{ inputs.suite-id }}/videos.tar.gz
+        retention-days: ${{ inputs.retention-days }}
+        if-no-files-found: ignore
+        compression-level: 0
+
+    - name: Compress and upload test logs
+      if: always()
+      shell: bash
+      run: |
+        chmod +x .github/scripts/ci/*.sh
+        .github/scripts/ci/compress-directory.sh \
+          "artifact-staging/${{ inputs.suite-id }}/logs" \
+          "artifact-staging/${{ inputs.suite-id }}/logs.tar.gz"
+      continue-on-error: true
+
+    - name: Upload test logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-prefix }}-${{ inputs.suite-id }}-logs
+        path: artifact-staging/${{ inputs.suite-id }}/logs.tar.gz
+        retention-days: 14
+        if-no-files-found: warn
+        compression-level: 0

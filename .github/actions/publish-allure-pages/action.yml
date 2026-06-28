@@ -1,0 +1,138 @@
+name: Publish Allure report to GitHub Pages
+description: Merges suite results, restores Allure history, generates report, deploys to Pages, and uploads artifacts
+
+inputs:
+  artifact-prefix:
+    description: Prefix used for nightly Allure result artifacts
+    required: true
+  artifact-retention-days:
+    description: Retention for uploaded HTML report artifact
+    required: false
+    default: '30'
+  history-retention-days:
+    description: Retention for Allure history backup artifact
+    required: false
+    default: '90'
+  java-version:
+    description: Java version for Maven Allure plugin
+    required: false
+    default: '17'
+
+outputs:
+  page-url:
+    description: Deployed GitHub Pages URL when publish succeeds
+    value: ${{ steps.deployment.outputs.page_url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Make Allure scripts executable
+      shell: bash
+      run: chmod +x .github/scripts/allure/*.sh
+
+    - name: Setup Java and Maven
+      uses: ./.github/actions/setup-java-maven
+      with:
+        java-version: ${{ inputs.java-version }}
+
+    - name: Fetch previous Allure history from GitHub Pages
+      continue-on-error: true
+      uses: actions/checkout@v4
+      with:
+        ref: gh-pages
+        path: gh-pages-cache
+
+    - name: Download previous Allure history artifact
+      continue-on-error: true
+      uses: actions/download-artifact@v4
+      with:
+        name: allure-history
+        path: allure-history-cache
+
+    - name: Download suite Allure results
+      continue-on-error: true
+      uses: actions/download-artifact@v4
+      with:
+        pattern: ${{ inputs.artifact-prefix }}-*-allure-results
+        merge-multiple: true
+        path: allure-input
+
+    - name: Merge Allure results
+      shell: bash
+      run: .github/scripts/allure/allure-merge-results.sh allure-input merged-allure-results
+
+    - name: Generate Allure report with history
+      shell: bash
+      run: |
+        .github/scripts/allure/allure-generate-with-history.sh \
+          merged-allure-results \
+          allure-report \
+          gh-pages-cache \
+          allure-history-cache \
+          .
+
+    - name: Prepare GitHub Pages site
+      shell: bash
+      run: |
+        mkdir -p pages-site
+        touch pages-site/.nojekyll
+        cp -r allure-report/. pages-site/
+
+    - name: Upload Allure history backup
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-history
+        path: allure-report/history
+        retention-days: ${{ inputs.history-retention-days }}
+        if-no-files-found: ignore
+
+    - name: Compress combined Allure HTML report
+      if: always()
+      shell: bash
+      run: |
+        chmod +x .github/scripts/ci/*.sh
+        .github/scripts/ci/compress-directory.sh allure-report allure-report-combined.tar.gz
+
+    - name: Upload combined Allure HTML report
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-prefix }}-allure-report-combined
+        path: allure-report-combined.tar.gz
+        retention-days: ${{ inputs.artifact-retention-days }}
+        if-no-files-found: warn
+        compression-level: 0
+
+    - name: Compress merged Allure results
+      if: always()
+      shell: bash
+      run: |
+        chmod +x .github/scripts/ci/*.sh
+        .github/scripts/ci/compress-directory.sh merged-allure-results merged-allure-results.tar.gz
+
+    - name: Upload merged Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-prefix }}-allure-results-combined
+        path: merged-allure-results.tar.gz
+        retention-days: ${{ inputs.artifact-retention-days }}
+        if-no-files-found: warn
+        compression-level: 0
+
+    - name: Upload GitHub Pages artifact
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: pages-site
+
+    - name: Deploy to GitHub Pages
+      id: deployment
+      if: always()
+      continue-on-error: true
+      uses: actions/deploy-pages@v4

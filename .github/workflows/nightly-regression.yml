@@ -5,93 +5,658 @@ on:
     - cron: '0 3 * * *'
   workflow_dispatch:
     inputs:
-      environment:
-        description: Target environment
+      automation_ref:
+        description: Automation branch or tag
+        required: false
+        default: main
+      backend_ref:
+        description: Backend branch or tag
+        required: false
+        default: main
+      frontend_ref:
+        description: Frontend branch or tag
+        required: false
+        default: main
+      test_suite:
+        description: Suites to run (full runs all jobs in parallel)
         required: true
-        default: stage
+        default: full
         type: choice
         options:
-          - stage
-          - dev
+          - full
+          - smoke
+          - api
+          - ui
+          - contract
+          - security
+      optional_services:
+        description: Optional Compose profile (mailhog, minio, redis)
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - mailhog
+          - minio
+          - redis
 
 concurrency:
-  group: nightly-regression-${{ github.event.inputs.environment || 'stage' }}
+  group: nightly-regression-ephemeral-${{ github.run_id }}
   cancel-in-progress: false
 
 permissions:
   contents: read
+  packages: write
+  pages: write
+  id-token: write
+  actions: read
 
 env:
   JAVA_VERSION: '17'
   MAVEN_OPTS: '--batch-mode --fail-at-end -Dstyle.color=always'
-  TARGET_ENV: ${{ github.event.inputs.environment || 'stage' }}
+  TEST_ENV: ci
+  COMPOSE_FILE: docker-compose.ci.yml
+  COMPOSE_PROJECT_NAME: flowiq-ci-${{ github.run_id }}
+  GHCR_REGISTRY: ghcr.io
+  BACKEND_REPOSITORY: ${{ vars.BACKEND_REPOSITORY || 'YevheniiaDem/flowiq-backend' }}
+  FRONTEND_REPOSITORY: ${{ vars.FRONTEND_REPOSITORY || 'YevheniiaDem/flowiq-frontend' }}
+  BACKEND_REF: ${{ github.event.inputs.backend_ref || 'main' }}
+  FRONTEND_REF: ${{ github.event.inputs.frontend_ref || 'main' }}
+  AUTOMATION_REF: ${{ github.event.inputs.automation_ref || github.ref_name }}
+  SELECTED_SUITE: ${{ github.event.inputs.test_suite || 'full' }}
+  COMPOSE_PROFILES: ${{ github.event.inputs.optional_services || '' }}
+  CI_SHARED_STACK: ${{ vars.CI_SHARED_STACK || 'false' }}
   ALLURE_RETENTION_DAYS: '30'
+  ARTIFACT_PREFIX: nightly-ephemeral-${{ github.run_number }}
+  CI_IMAGES_ARTIFACT: ci-images-${{ github.run_number }}
+  STACK_METADATA_ARTIFACT: stack-metadata-${{ github.run_number }}
 
 jobs:
-  nightly-regression:
-    name: Nightly Regression (${{ github.event.inputs.environment || 'stage' }})
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    environment: ${{ github.event.inputs.environment || 'stage' }}
+  build-environment:
+    name: Build Environment
+    runs-on: ${{ vars.CI_RUNNER_LABELS || 'ubuntu-latest' }}
+    timeout-minutes: 45
+    outputs:
+      compose-project-name: ${{ env.COMPOSE_PROJECT_NAME }}
+      backend-image: ${{ steps.images.outputs.backend-image }}
+      frontend-image: ${{ steps.images.outputs.frontend-image }}
+      backend-cache-hit: ${{ steps.images.outputs.backend-cache-hit }}
+      frontend-cache-hit: ${{ steps.images.outputs.frontend-cache-hit }}
+      build-duration-seconds: ${{ steps.images.outputs.build-duration-seconds }}
 
     steps:
-      - name: Checkout
+      - name: Checkout automation
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.AUTOMATION_REF }}
 
-      - name: Validate secrets
-        uses: ./.github/actions/validate-test-secrets
+      - name: Checkout backend
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.BACKEND_REPOSITORY }}
+          ref: ${{ env.BACKEND_REF }}
+          path: flowiq-backend
+          token: ${{ secrets.GH_PAT || github.token }}
+
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.FRONTEND_REPOSITORY }}
+          ref: ${{ env.FRONTEND_REF }}
+          path: flowiq-frontend
+          token: ${{ secrets.GH_PAT || github.token }}
+
+      - name: Build or pull CI Docker images
+        id: images
+        uses: ./.github/actions/build-ci-images
+        with:
+          backend-context: ./flowiq-backend
+          frontend-context: ./flowiq-frontend
+          registry: ${{ env.GHCR_REGISTRY }}
+
+      - name: Start ephemeral CI stack
+        uses: ./.github/actions/ephemeral-stack
+        with:
+          compose-file: ${{ env.COMPOSE_FILE }}
+          compose-project-name: ${{ env.COMPOSE_PROJECT_NAME }}
+          backend-context: ./flowiq-backend
+          frontend-context: ./flowiq-frontend
+          compose-profiles: ${{ env.COMPOSE_PROFILES }}
+
+      - name: Export pre-built Docker images
+        run: |
+          chmod +x .github/scripts/ci/*.sh
+          .github/scripts/ci/ci-export-images.sh ci-images.tar
+
+      - name: Upload CI image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.CI_IMAGES_ARTIFACT }}
+          path: ci-images.tar
+          retention-days: 1
+          if-no-files-found: warn
+
+      - name: Publish stack metadata
+        run: |
+          {
+            echo "COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}"
+            echo "COMPOSE_FILE=${COMPOSE_FILE}"
+            echo "COMPOSE_PROFILES=${COMPOSE_PROFILES}"
+            echo "CI_SHARED_STACK=${CI_SHARED_STACK}"
+            echo "BACKEND_IMAGE=${{ steps.images.outputs.backend-image }}"
+            echo "FRONTEND_IMAGE=${{ steps.images.outputs.frontend-image }}"
+            echo "BACKEND_SHA=${{ steps.images.outputs.backend-sha }}"
+            echo "FRONTEND_SHA=${{ steps.images.outputs.frontend-sha }}"
+            echo "BACKEND_CACHE_HIT=${{ steps.images.outputs.backend-cache-hit }}"
+            echo "FRONTEND_CACHE_HIT=${{ steps.images.outputs.frontend-cache-hit }}"
+            echo "IMAGE_BUILD_SECONDS=${{ steps.images.outputs.build-duration-seconds }}"
+          } > stack.env
+
+      - name: Upload stack metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.STACK_METADATA_ARTIFACT }}
+          path: stack.env
+          retention-days: 1
+
+  smoke:
+    name: Smoke
+    needs: build-environment
+    if: ${{ needs.build-environment.result == 'success' && (env.SELECTED_SUITE == 'full' || env.SELECTED_SUITE == 'smoke') }}
+    runs-on: ${{ vars.CI_RUNNER_LABELS || 'ubuntu-latest' }}
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout automation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.AUTOMATION_REF }}
+
+      - name: Setup test runner
+        uses: ./.github/actions/setup-ci-test-runner
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          install-playwright: 'true'
+
+      - name: Ensure CI stack
+        uses: ./.github/actions/ensure-ci-stack
+        with:
+          compose-file: ${{ env.COMPOSE_FILE }}
+          compose-project-name: ${{ env.COMPOSE_PROJECT_NAME }}
+          compose-profiles: ${{ env.COMPOSE_PROFILES }}
+          stack-metadata-artifact-name: ${{ env.STACK_METADATA_ARTIFACT }}
+          images-artifact-name: ${{ env.CI_IMAGES_ARTIFACT }}
+
+      - name: Run smoke tests
+        id: tests
         env:
-          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
-          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          TEST_USER_EMAIL: demo@flowiq.ai
+          TEST_USER_PASSWORD: demo123
+        run: |
+          chmod +x .github/scripts/ci/*.sh
+          TARGET_DIR=target/smoke-api-smoke .github/scripts/ci/run-test-profile.sh api-smoke
+          TARGET_DIR=target/smoke-ui-smoke .github/scripts/ci/run-test-profile.sh ui-smoke
 
-      - name: Setup Java and Maven cache
-        uses: ./.github/actions/setup-java-maven
+      - name: Upload suite artifacts
+        if: always()
+        uses: ./.github/actions/upload-suite-artifacts
+        with:
+          suite-id: smoke-api
+          target-dir: target/smoke-api-smoke
+          artifact-prefix: ${{ env.ARTIFACT_PREFIX }}
+          retention-days: ${{ env.ALLURE_RETENTION_DAYS }}
+
+      - name: Upload UI smoke artifacts
+        if: always()
+        uses: ./.github/actions/upload-suite-artifacts
+        with:
+          suite-id: smoke-ui
+          target-dir: target/smoke-ui-smoke
+          artifact-prefix: ${{ env.ARTIFACT_PREFIX }}
+          retention-days: ${{ env.ALLURE_RETENTION_DAYS }}
+          include-playwright: 'true'
+
+      - name: Teardown local stack
+        if: ${{ always() && env.CI_SHARED_STACK != 'true' }}
+        run: |
+          chmod +x .github/scripts/ci/*.sh
+          .github/scripts/ci/ci-teardown-local.sh smoke
+
+      - name: Upload Docker diagnostics
+        if: ${{ always() && env.CI_SHARED_STACK != 'true' }}
+        uses: ./.github/actions/upload-docker-diagnostics
+        with:
+          artifact-name: ${{ env.ARTIFACT_PREFIX }}-smoke-docker-diagnostics
+          artifacts-dir: ci-artifacts
+          retention-days: 14
+
+  api-regression:
+    name: API Regression
+    needs: build-environment
+    if: ${{ needs.build-environment.result == 'success' && (env.SELECTED_SUITE == 'full' || env.SELECTED_SUITE == 'api') }}
+    runs-on: ${{ vars.CI_RUNNER_LABELS || 'ubuntu-latest' }}
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout automation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.AUTOMATION_REF }}
+
+      - name: Setup test runner
+        uses: ./.github/actions/setup-ci-test-runner
         with:
           java-version: ${{ env.JAVA_VERSION }}
 
-      - name: Run API regression suite
+      - name: Ensure CI stack
+        uses: ./.github/actions/ensure-ci-stack
+        with:
+          compose-file: ${{ env.COMPOSE_FILE }}
+          compose-project-name: ${{ env.COMPOSE_PROJECT_NAME }}
+          compose-profiles: ${{ env.COMPOSE_PROFILES }}
+          stack-metadata-artifact-name: ${{ env.STACK_METADATA_ARTIFACT }}
+          images-artifact-name: ${{ env.CI_IMAGES_ARTIFACT }}
+
+      - name: Run API regression
+        id: tests
         env:
-          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
-          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-        run: mvn test -Papi-regression -Denv=${{ env.TARGET_ENV }} -B
+          TEST_USER_EMAIL: demo@flowiq.ai
+          TEST_USER_PASSWORD: demo123
+          TARGET_DIR: target/api-regression
+        run: |
+          chmod +x .github/scripts/ci/*.sh
+          .github/scripts/ci/run-test-profile.sh api-regression
+
+      - name: Upload suite artifacts
+        if: always()
+        uses: ./.github/actions/upload-suite-artifacts
+        with:
+          suite-id: api-regression
+          target-dir: target/api-regression
+          artifact-prefix: ${{ env.ARTIFACT_PREFIX }}
+          retention-days: ${{ env.ALLURE_RETENTION_DAYS }}
+
+      - name: Teardown local stack
+        if: ${{ always() && env.CI_SHARED_STACK != 'true' }}
+        run: |
+          chmod +x .github/scripts/ci/*.sh
+          .github/scripts/ci/ci-teardown-local.sh api-regression
+
+      - name: Upload Docker diagnostics
+        if: ${{ always() && env.CI_SHARED_STACK != 'true' }}
+        uses: ./.github/actions/upload-docker-diagnostics
+        with:
+          artifact-name: ${{ env.ARTIFACT_PREFIX }}-api-regression-docker-diagnostics
+          artifacts-dir: ci-artifacts
+          retention-days: 14
+
+  ui-regression:
+    name: UI Regression
+    needs: build-environment
+    if: ${{ needs.build-environment.result == 'success' && (env.SELECTED_SUITE == 'full' || env.SELECTED_SUITE == 'ui') }}
+    runs-on: ${{ vars.CI_RUNNER_LABELS || 'ubuntu-latest' }}
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout automation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.AUTOMATION_REF }}
+
+      - name: Setup test runner
+        uses: ./.github/actions/setup-ci-test-runner
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          install-playwright: 'true'
+
+      - name: Ensure CI stack
+        uses: ./.github/actions/ensure-ci-stack
+        with:
+          compose-file: ${{ env.COMPOSE_FILE }}
+          compose-project-name: ${{ env.COMPOSE_PROJECT_NAME }}
+          compose-profiles: ${{ env.COMPOSE_PROFILES }}
+          stack-metadata-artifact-name: ${{ env.STACK_METADATA_ARTIFACT }}
+          images-artifact-name: ${{ env.CI_IMAGES_ARTIFACT }}
+
+      - name: Run UI regression
+        id: tests
+        env:
+          TEST_USER_EMAIL: demo@flowiq.ai
+          TEST_USER_PASSWORD: demo123
+          TARGET_DIR: target/ui-regression
+        run: |
+          chmod +x .github/scripts/ci/*.sh
+          .github/scripts/ci/run-test-profile.sh ui-smoke
+
+      - name: Upload suite artifacts
+        if: always()
+        uses: ./.github/actions/upload-suite-artifacts
+        with:
+          suite-id: ui-regression
+          target-dir: target/ui-regression
+          artifact-prefix: ${{ env.ARTIFACT_PREFIX }}
+          retention-days: ${{ env.ALLURE_RETENTION_DAYS }}
+          include-playwright: 'true'
+
+      - name: Teardown local stack
+        if: ${{ always() && env.CI_SHARED_STACK != 'true' }}
+        run: |
+          chmod +x .github/scripts/ci/*.sh
+          .github/scripts/ci/ci-teardown-local.sh ui-regression
+
+      - name: Upload Docker diagnostics
+        if: ${{ always() && env.CI_SHARED_STACK != 'true' }}
+        uses: ./.github/actions/upload-docker-diagnostics
+        with:
+          artifact-name: ${{ env.ARTIFACT_PREFIX }}-ui-regression-docker-diagnostics
+          artifacts-dir: ci-artifacts
+          retention-days: 14
+
+  contract:
+    name: Contract Tests
+    needs: build-environment
+    if: ${{ needs.build-environment.result == 'success' && (env.SELECTED_SUITE == 'full' || env.SELECTED_SUITE == 'contract') }}
+    runs-on: ${{ vars.CI_RUNNER_LABELS || 'ubuntu-latest' }}
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout automation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.AUTOMATION_REF }}
+
+      - name: Setup test runner
+        uses: ./.github/actions/setup-ci-test-runner
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Ensure CI stack
+        uses: ./.github/actions/ensure-ci-stack
+        with:
+          compose-file: ${{ env.COMPOSE_FILE }}
+          compose-project-name: ${{ env.COMPOSE_PROJECT_NAME }}
+          compose-profiles: ${{ env.COMPOSE_PROFILES }}
+          stack-metadata-artifact-name: ${{ env.STACK_METADATA_ARTIFACT }}
+          images-artifact-name: ${{ env.CI_IMAGES_ARTIFACT }}
 
       - name: Run contract tests
+        id: tests
         env:
-          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
-          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-        run: mvn test -Pcontract -Denv=${{ env.TARGET_ENV }} -B
-
-      - name: Upload Surefire reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: nightly-surefire-${{ env.TARGET_ENV }}-${{ github.run_number }}
-          path: target/surefire-reports
-          retention-days: ${{ env.ALLURE_RETENTION_DAYS }}
-          if-no-files-found: warn
-
-      - name: Upload test logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: nightly-logs-${{ env.TARGET_ENV }}-${{ github.run_number }}
-          path: target/logs
-          retention-days: 14
-          if-no-files-found: warn
-
-      - name: Generate and upload Allure report
-        if: always()
-        uses: ./.github/actions/generate-allure-report
-        with:
-          artifact-prefix: nightly-regression-${{ env.TARGET_ENV }}-${{ github.run_number }}
-          retention-days: ${{ env.ALLURE_RETENTION_DAYS }}
-
-      - name: Regression summary
-        if: always()
+          TEST_USER_EMAIL: demo@flowiq.ai
+          TEST_USER_PASSWORD: demo123
+          TARGET_DIR: target/contract
         run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            echo "Nightly regression completed successfully for environment '${{ env.TARGET_ENV }}'."
-          else
-            echo "::warning::Nightly regression failed for environment '${{ env.TARGET_ENV }}'. Review Allure and Surefire artifacts."
+          chmod +x .github/scripts/ci/*.sh
+          .github/scripts/ci/run-test-profile.sh contract
+
+      - name: Upload suite artifacts
+        if: always()
+        uses: ./.github/actions/upload-suite-artifacts
+        with:
+          suite-id: contract
+          target-dir: target/contract
+          artifact-prefix: ${{ env.ARTIFACT_PREFIX }}
+          retention-days: ${{ env.ALLURE_RETENTION_DAYS }}
+
+      - name: Teardown local stack
+        if: ${{ always() && env.CI_SHARED_STACK != 'true' }}
+        run: |
+          chmod +x .github/scripts/ci/*.sh
+          .github/scripts/ci/ci-teardown-local.sh contract
+
+      - name: Upload Docker diagnostics
+        if: ${{ always() && env.CI_SHARED_STACK != 'true' }}
+        uses: ./.github/actions/upload-docker-diagnostics
+        with:
+          artifact-name: ${{ env.ARTIFACT_PREFIX }}-contract-docker-diagnostics
+          artifacts-dir: ci-artifacts
+          retention-days: 14
+
+  security:
+    name: Security
+    needs: build-environment
+    if: ${{ needs.build-environment.result == 'success' && (env.SELECTED_SUITE == 'full' || env.SELECTED_SUITE == 'security') }}
+    runs-on: ${{ vars.CI_RUNNER_LABELS || 'ubuntu-latest' }}
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout automation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.AUTOMATION_REF }}
+
+      - name: Security suite placeholder
+        id: tests
+        run: |
+          mkdir -p target/security
+          echo "Security Maven profile (-Psecurity) is not implemented yet." > target/security/placeholder.log
+          echo "::warning::Security suite placeholder — no tests executed."
+
+      - name: Upload placeholder log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_PREFIX }}-security-placeholder
+          path: target/security/placeholder.log
+          retention-days: 7
+          if-no-files-found: warn
+
+  teardown-environment:
+    name: Teardown Environment
+    needs:
+      - build-environment
+      - smoke
+      - api-regression
+      - ui-regression
+      - contract
+      - security
+    if: ${{ always() && needs.build-environment.result != 'cancelled' }}
+    runs-on: ${{ vars.CI_RUNNER_LABELS || 'ubuntu-latest' }}
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout automation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.AUTOMATION_REF }}
+
+      - name: Collect Docker logs and teardown shared stack
+        if: ${{ env.CI_SHARED_STACK == 'true' }}
+        uses: ./.github/actions/ephemeral-stack-teardown
+        with:
+          compose-file: ${{ env.COMPOSE_FILE }}
+          compose-project-name: ${{ env.COMPOSE_PROJECT_NAME }}
+          compose-profiles: ${{ env.COMPOSE_PROFILES }}
+          artifacts-dir: ci-artifacts
+
+      - name: Upload Docker diagnostics
+        if: ${{ always() && env.CI_SHARED_STACK == 'true' }}
+        uses: ./.github/actions/upload-docker-diagnostics
+        with:
+          artifact-name: ${{ env.ARTIFACT_PREFIX }}-docker-diagnostics
+          artifacts-dir: ci-artifacts
+          retention-days: 14
+
+  regression-summary:
+    name: Regression Summary
+    needs:
+      - build-environment
+      - smoke
+      - api-regression
+      - ui-regression
+      - contract
+      - security
+      - teardown-environment
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Evaluate pipeline results
+        run: |
+          echo "Selected suite: ${{ env.SELECTED_SUITE }}"
+          echo "build-environment: ${{ needs.build-environment.result }}"
+          echo "smoke: ${{ needs.smoke.result }}"
+          echo "api-regression: ${{ needs.api-regression.result }}"
+          echo "ui-regression: ${{ needs.ui-regression.result }}"
+          echo "contract: ${{ needs.contract.result }}"
+          echo "security: ${{ needs.security.result }}"
+          echo "teardown-environment: ${{ needs.teardown-environment.result }}"
+
+          fail=0
+
+          if [ "${{ needs.build-environment.result }}" != "success" ]; then
+            echo "::error::Build Environment failed."
+            fail=1
+          fi
+
+          check_job() {
+            local name="$1"
+            local result="$2"
+            local expected="$3"
+            if [ "${expected}" != "true" ]; then
+              return 0
+            fi
+            if [ "${result}" = "success" ] || [ "${result}" = "skipped" ]; then
+              if [ "${result}" = "success" ]; then
+                echo "${name}: passed"
+              else
+                echo "${name}: skipped"
+              fi
+              return 0
+            fi
+            echo "::error::${name} failed (result=${result})."
+            fail=1
+          }
+
+          suite="${{ env.SELECTED_SUITE }}"
+          should_run() {
+            local id="$1"
+            [ "${suite}" = "full" ] || [ "${suite}" = "${id}" ]
+          }
+
+          if should_run smoke; then check_job "Smoke" "${{ needs.smoke.result }}" "true"; fi
+          if should_run api; then check_job "API Regression" "${{ needs.api-regression.result }}" "true"; fi
+          if should_run ui; then check_job "UI Regression" "${{ needs.ui-regression.result }}" "true"; fi
+          if should_run contract; then check_job "Contract Tests" "${{ needs.contract.result }}" "true"; fi
+          if should_run security; then check_job "Security" "${{ needs.security.result }}" "true"; fi
+
+          if [ "${fail}" -ne 0 ]; then
             exit 1
           fi
+
+          echo "Nightly ephemeral regression pipeline completed successfully."
+
+  detect-flaky-tests:
+    name: Detect Flaky Tests
+    needs:
+      - smoke
+      - api-regression
+      - ui-regression
+      - contract
+      - regression-summary
+    if: ${{ always() && !cancelled() }}
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      flaky-count: ${{ steps.flaky.outputs.flaky-count }}
+      failed-only-count: ${{ steps.flaky.outputs.failed-only-count }}
+
+    steps:
+      - name: Checkout automation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.AUTOMATION_REF }}
+
+      - name: Detect flaky tests
+        id: flaky
+        continue-on-error: true
+        uses: ./.github/actions/detect-flaky-tests
+        with:
+          artifact-prefix: ${{ env.ARTIFACT_PREFIX }}
+          java-version: ${{ env.JAVA_VERSION }}
+          history-retention-days: '90'
+
+      - name: Flaky detection note
+        if: always()
+        run: |
+          echo "Flaky tests: ${{ steps.flaky.outputs.flaky-count || '0' }}"
+          echo "Failed-only (non-flaky): ${{ steps.flaky.outputs.failed-only-count || '0' }}"
+
+  publish-allure-report:
+    name: Publish Allure Report
+    needs:
+      - smoke
+      - api-regression
+      - ui-regression
+      - contract
+      - security
+      - regression-summary
+      - detect-flaky-tests
+    if: ${{ always() && !cancelled() }}
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      page-url: ${{ steps.publish.outputs.page-url }}
+    concurrency:
+      group: github-pages-allure
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.publish.outputs.page-url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout automation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.AUTOMATION_REF }}
+
+      - name: Publish Allure to GitHub Pages
+        id: publish
+        continue-on-error: true
+        uses: ./.github/actions/publish-allure-pages
+        with:
+          artifact-prefix: ${{ env.ARTIFACT_PREFIX }}
+          artifact-retention-days: ${{ env.ALLURE_RETENTION_DAYS }}
+          history-retention-days: '90'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Publish summary
+        if: always()
+        run: |
+          if [ "${{ steps.publish.outputs.page-url }}" != "" ]; then
+            echo "Allure report published: ${{ steps.publish.outputs.page-url }}"
+          else
+            echo "::warning::Allure GitHub Pages publish did not complete. Download the combined HTML artifact instead."
+          fi
+
+  ci-summary:
+    name: CI Diagnostics Summary
+    needs:
+      - regression-summary
+      - detect-flaky-tests
+      - publish-allure-report
+    if: ${{ always() && !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout automation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.AUTOMATION_REF }}
+
+      - name: Write CI diagnostics summary
+        uses: ./.github/actions/write-ci-summary
+        with:
+          artifact-prefix: ${{ env.ARTIFACT_PREFIX }}
+          allure-page-url: ${{ needs.publish-allure-report.outputs.page-url }}
+          flaky-count: ${{ needs.detect-flaky-tests.outputs.flaky-count || '0' }}
+          failed-only-count: ${{ needs.detect-flaky-tests.outputs.failed-only-count || '0' }}
+          pipeline-status: ${{ needs.regression-summary.result == 'success' && 'passed' || 'failed' }}

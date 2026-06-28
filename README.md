@@ -244,9 +244,31 @@ Live tests run manually or on a nightly schedule against **stage/dev** with GitH
 | **CI** (`ci.yml`) | `push`, `pull_request` → `main`, `develop` | Compile + unit gate only | `mvn clean compile` then `mvn test -Dgroups=unit` |
 | **API Smoke** (`api-smoke.yml`) | Manual (`workflow_dispatch`) | API smoke against live env | `mvn test -Papi-smoke -Denv=stage` |
 | **UI Smoke** (`ui-smoke.yml`) | Manual (`workflow_dispatch`) | Playwright UI smoke | `mvn test -Pui-smoke -Denv=stage` |
-| **Nightly Regression** (`nightly-regression.yml`) | Cron `0 3 * * *` + manual | Full regression suite | `mvn test -Pregression -Denv=stage` |
+| **Nightly Regression** (`nightly-regression.yml`) | Cron `0 3 * * *` + manual | Ephemeral Docker stack + parallel suites | `mvn clean test -Denv=ci` |
 
-Nightly regression uses `continue-on-error: true` — failures are reported but do not block day-to-day development.
+Nightly regression runs against an **ephemeral CI environment** (PostgreSQL, backend, frontend in Docker) — not against live stage. Publishing failures do not fail the workflow.
+
+### Published Allure Report (GitHub Pages)
+
+After each nightly run, a **combined Allure report** is published to GitHub Pages with **history preserved** between runs (trends, duration, retries, flaky tests):
+
+**Live report:** [https://yevheniiadem.github.io/flowiq-automation/](https://yevheniiadem.github.io/flowiq-automation/)
+
+> **One-time setup:** In the repository go to **Settings → Pages → Build and deployment → Source** and select **GitHub Actions**. If Pages publish fails, download the `*-allure-report-combined` artifact instead.
+
+| Artifact | Contents |
+|----------|----------|
+| `nightly-ephemeral-{run}-allure-report-combined` | Full HTML report (gzip tarball) |
+| `nightly-ephemeral-{run}-allure-results-combined` | Raw merged results (gzip tarball) |
+| `allure-history` | History JSON for cross-run trends (90-day retention) |
+| `flaky-test-history` | Flaky classification history (90-day retention) |
+| `nightly-ephemeral-{run}-flaky-report` | JSON + HTML flaky classification (gzip tarball) |
+| `nightly-ephemeral-{run}-{suite}-*` | Per-suite Surefire, Allure, traces, screenshots, videos (failed UI only), logs |
+| `nightly-ephemeral-{run}-{suite}-docker-diagnostics` | Compose + DB + app logs, docker ps/inspect/images/stats |
+
+The **CI Diagnostics Summary** job lists every artifact with download links. See [docs/automation/CI_DIAGNOSTICS.md](docs/automation/CI_DIAGNOSTICS.md).
+
+See [docs/automation/CI_INFRASTRUCTURE.md](docs/automation/CI_INFRASTRUCTURE.md) and [docs/automation/FLAKY_TEST_DETECTION.md](docs/automation/FLAKY_TEST_DETECTION.md) for reporting pipelines.
 
 ### Manual run (GitHub UI)
 
@@ -254,7 +276,7 @@ Nightly regression uses `continue-on-error: true` — failures are reported but 
 2. Select **API Smoke**, **UI Smoke**, or **Nightly Regression**.
 3. Click **Run workflow**.
 4. Choose environment: `stage` (default) or `dev`.
-5. Download artifacts: `allure-results`, `surefire-reports` (and Playwright traces for UI).
+5. Download artifacts: per-suite Surefire/Allure, combined report, or open the [GitHub Pages Allure report](https://yevheniiadem.github.io/flowiq-automation/).
 
 ### Required GitHub Secrets
 
