@@ -21,7 +21,7 @@ permissions:
 
 env:
   JAVA_VERSION: '17'
-  MAVEN_OPTS: '--batch-mode --fail-at-end -Dstyle.color=always'
+  MAVEN_OPTS: '-Dstyle.color=always'
   TARGET_ENV: ${{ inputs.environment }}
   ALLURE_RETENTION_DAYS: '14'
 
@@ -51,7 +51,7 @@ jobs:
         env:
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-        run: mvn test -Papi-smoke -Denv=${{ env.TARGET_ENV }} -B
+        run: mvn test -Papi-smoke -Denv=${{ env.TARGET_ENV }} -B --fail-at-end
 
       - name: Upload Surefire reports
         if: always()

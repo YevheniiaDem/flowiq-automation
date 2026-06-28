@@ -14,6 +14,7 @@ mvn clean test \
   -Denv="${TEST_ENV}" \
   -Dproject.build.directory="${TARGET_DIR}" \
   -Dallure.results.directory="${TARGET_DIR}/allure-results" \
-  -B
+  -B \
+  --fail-at-end
 
 echo "Profile '${PROFILE}' completed."

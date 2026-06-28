@@ -202,7 +202,13 @@ UI Smoke additionally caches Playwright browsers under `~/.cache/ms-playwright`.
 
 ```yaml
 JAVA_VERSION: '17'
-MAVEN_OPTS: '--batch-mode --fail-at-end -Dstyle.color=always'
+MAVEN_OPTS: '-Dstyle.color=always'
+```
+
+Maven CLI flags (`-B`, `--fail-at-end`) belong on `mvn` commands, not in `MAVEN_OPTS`:
+
+```bash
+mvn test -Pcontract -Denv=local -B --fail-at-end
 ```
 
 Live-test workflows pass secrets to Maven via Owner/env resolution:

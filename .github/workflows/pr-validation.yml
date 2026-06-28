@@ -15,7 +15,7 @@ permissions:
 
 env:
   JAVA_VERSION: '17'
-  MAVEN_OPTS: '--batch-mode --fail-at-end -Dstyle.color=always'
+  MAVEN_OPTS: '-Dstyle.color=always'
   BACKEND_REPOSITORY: ${{ vars.BACKEND_REPOSITORY || 'YevheniiaDem/flowiq-backend' }}
   BACKEND_REF: ${{ github.event.pull_request.head.ref || github.ref_name }}
   ALLURE_RETENTION_DAYS: '7'
@@ -72,7 +72,7 @@ jobs:
 
       - name: Run unit tests
         working-directory: flowiq-backend
-        run: mvn test -Dtest=com.flowiq.unit.** -B
+        run: mvn test -Dtest=com.flowiq.unit.** -B --fail-at-end
 
       - name: Upload Surefire reports
         if: always()
@@ -145,7 +145,7 @@ jobs:
         run: .github/scripts/wait-for-backend.sh http://localhost:8080/api/health 60 5
 
       - name: Run contract tests
-        run: mvn test -Pcontract -Denv=local -B
+        run: mvn test -Pcontract -Denv=local -B --fail-at-end
 
       - name: Stop backend
         if: always()

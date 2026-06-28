@@ -53,7 +53,7 @@ permissions:
 
 env:
   JAVA_VERSION: '17'
-  MAVEN_OPTS: '--batch-mode --fail-at-end -Dstyle.color=always'
+  MAVEN_OPTS: '-Dstyle.color=always'
   TEST_ENV: ci
   COMPOSE_FILE: docker-compose.ci.yml
   COMPOSE_PROJECT_NAME: flowiq-ci-${{ github.run_id }}

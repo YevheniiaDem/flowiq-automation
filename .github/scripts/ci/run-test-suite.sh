@@ -8,7 +8,7 @@ TEST_ENV="${TEST_ENV:-ci}"
 run_profile() {
   local profile="$1"
   echo "Running Maven profile '${profile}' with env '${TEST_ENV}'..."
-  mvn clean test -P"${profile}" -Denv="${TEST_ENV}" -B
+  mvn clean test -P"${profile}" -Denv="${TEST_ENV}" -B --fail-at-end
 }
 
 case "${SUITE}" in
