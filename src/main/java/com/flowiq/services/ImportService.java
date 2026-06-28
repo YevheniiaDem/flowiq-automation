@@ -11,7 +11,7 @@ import java.io.File;
 
 public class ImportService extends BaseApiService {
 
-    @Step("Upload CSV import file: {file.name}")
+    @Step("Upload CSV import file")
     public ImportJobResponse upload(File file) {
         return BaseResponseSpecification.extractCreated(
                 postMultipart(ApiEndpoints.IMPORTS_UPLOAD, file),
@@ -25,7 +25,7 @@ public class ImportService extends BaseApiService {
 
     @Step("Get import job by id {id}")
     public ImportJobResponse getById(long id) {
-        return getOk(ApiEndpoints.IMPORT_BY_ID.replace("{id}", String.valueOf(id)), ImportJobResponse.class);
+        return getOk(ApiEndpoints.withPathParam(ApiEndpoints.IMPORT_BY_ID, "id", id), ImportJobResponse.class);
     }
 
     @Step("Fetch import jobs (unchecked)")
@@ -38,13 +38,13 @@ public class ImportService extends BaseApiService {
         return fetchUnauthenticated(ApiEndpoints.IMPORTS, ImportListResponse.class);
     }
 
-    @Step("Attempt upload import file: {file.name}")
+    @Step("Attempt upload import file")
     public ApiCallResult<ImportJobResponse> attemptUpload(File file) {
         return ApiCallResult.from(postMultipart(ApiEndpoints.IMPORTS_UPLOAD, file), ImportJobResponse.class);
     }
 
     @Step("Fetch import job by id {id} (unchecked)")
     public ApiCallResult<ImportJobResponse> fetchById(long id) {
-        return attemptGet(ApiEndpoints.IMPORT_BY_ID.replace("{id}", String.valueOf(id)), ImportJobResponse.class);
+        return attemptGet(ApiEndpoints.withPathParam(ApiEndpoints.IMPORT_BY_ID, "id", id), ImportJobResponse.class);
     }
 }

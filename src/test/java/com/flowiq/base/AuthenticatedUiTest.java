@@ -1,5 +1,6 @@
 package com.flowiq.base;
 
+import com.flowiq.assertions.ApiAssertions;
 import com.flowiq.auth.TokenManager;
 import com.flowiq.clients.ApiClientFactory;
 import com.flowiq.factories.TestDataFactory;
@@ -41,23 +42,18 @@ public abstract class AuthenticatedUiTest extends BaseUiTest {
     }
 
     protected void injectAuthIntoBrowser(AuthResponse authResponse) {
-        page.navigate("/");
-        String userJson = JsonUtils.toJson(authResponse.getUser());
-        page.evaluate(
-                "([token, refreshToken, userJson]) => {"
-                        + "localStorage.setItem('token', token);"
-                        + "localStorage.setItem('refreshToken', refreshToken);"
-                        + "localStorage.setItem('user', userJson);"
-                        + "}",
-                new Object[]{authResponse.getToken(), authResponse.getRefreshToken(), userJson}
-        );
-        page.reload();
+        storeAuthInBrowser(authResponse);
         OnboardingUiHelper.dismissOverlays(page);
         page.reload();
         UiAssertions.waitForPageLoad(page);
     }
 
     protected void injectAuthWithoutOnboardingDismissal(AuthResponse authResponse) {
+        storeAuthInBrowser(authResponse);
+        UiAssertions.waitForPageLoad(page);
+    }
+
+    private void storeAuthInBrowser(AuthResponse authResponse) {
         page.navigate("/");
         String userJson = JsonUtils.toJson(authResponse.getUser());
         page.evaluate(
@@ -69,6 +65,5 @@ public abstract class AuthenticatedUiTest extends BaseUiTest {
                 new Object[]{authResponse.getToken(), authResponse.getRefreshToken(), userJson}
         );
         page.reload();
-        UiAssertions.waitForPageLoad(page);
     }
 }

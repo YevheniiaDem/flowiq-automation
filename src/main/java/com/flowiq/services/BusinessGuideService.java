@@ -2,6 +2,7 @@ package com.flowiq.services;
 
 import com.flowiq.clients.ApiCallResult;
 import com.flowiq.constants.ApiEndpoints;
+import com.flowiq.constants.TestConstants;
 import com.flowiq.models.knowledge.KnowledgeArticleDetailDto;
 import com.flowiq.models.knowledge.KnowledgeArticlePageDto;
 import com.flowiq.models.knowledge.KnowledgeCategoryDto;
@@ -22,17 +23,18 @@ public class BusinessGuideService extends BaseApiService {
 
     @Step("List business guide articles (default pagination)")
     public KnowledgeArticlePageDto listArticles() {
-        return listArticles(Map.of("page", 0, "size", 20));
+        return listArticles(TestConstants.pagination(TestConstants.DEFAULT_PAGE_SIZE));
     }
 
     @Step("Get article by slug: {slug}")
     public KnowledgeArticleDetailDto getArticleBySlug(String slug) {
-        return getOk(ApiEndpoints.BUSINESS_GUIDE_ARTICLE_BY_SLUG.replace("{slug}", slug), KnowledgeArticleDetailDto.class);
+        return getOk(ApiEndpoints.withPathParam(ApiEndpoints.BUSINESS_GUIDE_ARTICLE_BY_SLUG, "slug", slug),
+                KnowledgeArticleDetailDto.class);
     }
 
     @Step("List article categories")
     public List<KnowledgeCategoryDto> getCategories() {
-        return get(ApiEndpoints.BUSINESS_GUIDE_CATEGORIES).getRaw().jsonPath().getList("", KnowledgeCategoryDto.class);
+        return getList(ApiEndpoints.BUSINESS_GUIDE_CATEGORIES, KnowledgeCategoryDto.class);
     }
 
     @Step("Search business guide articles: {query}")
@@ -54,22 +56,25 @@ public class BusinessGuideService extends BaseApiService {
 
     @Step("Fetch articles (unchecked, default pagination)")
     public ApiCallResult<KnowledgeArticlePageDto> fetchArticles() {
-        return fetchArticles(Map.of("page", 0, "size", 20));
+        return fetchArticles(TestConstants.pagination(TestConstants.DEFAULT_PAGE_SIZE));
     }
 
     @Step("Fetch articles without authentication")
     public ApiCallResult<KnowledgeArticlePageDto> fetchArticlesUnauthorized() {
-        return fetchUnauthenticated(ApiEndpoints.BUSINESS_GUIDE_ARTICLES, Map.of("page", 0, "size", 20), KnowledgeArticlePageDto.class);
+        return fetchUnauthenticated(ApiEndpoints.BUSINESS_GUIDE_ARTICLES,
+                TestConstants.pagination(TestConstants.DEFAULT_PAGE_SIZE),
+                KnowledgeArticlePageDto.class);
     }
 
     @Step("Search articles without query")
     public ApiCallResult<KnowledgeSearchResponseDto> fetchSearchWithoutQuery() {
-        return fetch(ApiEndpoints.BUSINESS_GUIDE_SEARCH, Map.of("page", 0, "size", 20), KnowledgeSearchResponseDto.class);
+        return fetch(ApiEndpoints.BUSINESS_GUIDE_SEARCH, TestConstants.pagination(TestConstants.DEFAULT_PAGE_SIZE),
+                KnowledgeSearchResponseDto.class);
     }
 
     @Step("Fetch article by slug {slug} (unchecked)")
     public ApiCallResult<KnowledgeArticleDetailDto> fetchArticleBySlug(String slug) {
-        return attemptGet(ApiEndpoints.BUSINESS_GUIDE_ARTICLE_BY_SLUG.replace("{slug}", slug),
+        return attemptGet(ApiEndpoints.withPathParam(ApiEndpoints.BUSINESS_GUIDE_ARTICLE_BY_SLUG, "slug", slug),
                 KnowledgeArticleDetailDto.class);
     }
 

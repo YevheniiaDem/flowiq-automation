@@ -96,6 +96,10 @@ public final class ApiEndpoints {
     public static final String AI_ACCOUNTANT_FORECASTS = "/ai-accountant/forecasts";
     public static final String AI_ACCOUNTANT_CHAT = "/ai-accountant/chat";
 
+    public static String withPathParam(String pathTemplate, String paramName, Object value) {
+        return pathTemplate.replace("{" + paramName + "}", String.valueOf(value));
+    }
+
     private ApiEndpoints() {
     }
 }

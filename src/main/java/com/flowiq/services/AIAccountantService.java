@@ -3,6 +3,7 @@ package com.flowiq.services;
 import com.flowiq.clients.ApiCallResult;
 import com.flowiq.clients.BaseResponseSpecification;
 import com.flowiq.constants.ApiEndpoints;
+import com.flowiq.factories.TestDataFactory;
 import com.flowiq.models.request.AIAccountantChatRequest;
 import com.flowiq.models.response.AIAccountantChatResponse;
 import com.flowiq.models.response.AIAccountantHealthResponse;
@@ -22,7 +23,7 @@ public class AIAccountantService extends BaseApiService {
 
     @Step("Get AI financial recommendations")
     public List<AIRecommendationResponse> getRecommendations() {
-        return get(ApiEndpoints.AI_ACCOUNTANT_RECOMMENDATIONS).getRaw().jsonPath().getList("", AIRecommendationResponse.class);
+        return getList(ApiEndpoints.AI_ACCOUNTANT_RECOMMENDATIONS, AIRecommendationResponse.class);
     }
 
     @Step("Get AI tax advisor advice")
@@ -42,9 +43,7 @@ public class AIAccountantService extends BaseApiService {
 
     @Step("Chat with AI Accountant: {message}")
     public AIAccountantChatResponse chat(String message) {
-        AIAccountantChatRequest request = new AIAccountantChatRequest();
-        request.setMessage(message);
-        return chat(request);
+        return chat(TestDataFactory.chatRequest(message));
     }
 
     @Step("Fetch AI Accountant health (unchecked)")

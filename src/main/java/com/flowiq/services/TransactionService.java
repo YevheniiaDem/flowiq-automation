@@ -3,6 +3,7 @@ package com.flowiq.services;
 import com.flowiq.clients.ApiCallResult;
 import com.flowiq.clients.BaseResponseSpecification;
 import com.flowiq.constants.ApiEndpoints;
+import com.flowiq.constants.TestConstants;
 import com.flowiq.models.request.CreateTransactionRequest;
 import com.flowiq.models.request.UpdateTransactionRequest;
 import com.flowiq.models.response.TransactionPageResponse;
@@ -22,7 +23,7 @@ public class TransactionService extends BaseApiService {
 
     @Step("List transactions (default pagination)")
     public TransactionPageResponse list() {
-        return list(Map.of("page", 0, "size", 10));
+        return list(TestConstants.pagination(TestConstants.TRANSACTION_LIST_PAGE_SIZE));
     }
 
     @Step("Get transaction summary")
@@ -32,7 +33,7 @@ public class TransactionService extends BaseApiService {
 
     @Step("Get transaction by id {id}")
     public TransactionResponse getById(long id) {
-        return getOk(ApiEndpoints.TRANSACTION_BY_ID.replace("{id}", String.valueOf(id)), TransactionResponse.class);
+        return getOk(ApiEndpoints.withPathParam(ApiEndpoints.TRANSACTION_BY_ID, "id", id), TransactionResponse.class);
     }
 
     @Step("Create transaction")
@@ -43,21 +44,19 @@ public class TransactionService extends BaseApiService {
     @Step("Update transaction {id}")
     public TransactionResponse update(long id, UpdateTransactionRequest request) {
         return BaseResponseSpecification.extractOk(
-                put(ApiEndpoints.TRANSACTION_BY_ID.replace("{id}", String.valueOf(id)), request),
+                put(ApiEndpoints.withPathParam(ApiEndpoints.TRANSACTION_BY_ID, "id", id), request),
                 TransactionResponse.class);
     }
 
     @Step("Delete transaction {id}")
     public void deleteById(long id) {
-        deleteNoContent(ApiEndpoints.TRANSACTION_BY_ID.replace("{id}", String.valueOf(id)));
+        deleteNoContent(ApiEndpoints.withPathParam(ApiEndpoints.TRANSACTION_BY_ID, "id", id));
     }
 
     @Step("Search transactions: {search}")
     public TransactionPageResponse search(String search) {
-        Map<String, Object> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<>(TestConstants.pagination(TestConstants.TRANSACTION_LIST_PAGE_SIZE));
         params.put("search", search);
-        params.put("page", 0);
-        params.put("size", 10);
         return list(params);
     }
 
@@ -68,7 +67,7 @@ public class TransactionService extends BaseApiService {
 
     @Step("Fetch transactions list (unchecked, default pagination)")
     public ApiCallResult<TransactionPageResponse> fetchList() {
-        return fetchList(Map.of("page", 0, "size", 10));
+        return fetchList(TestConstants.pagination(TestConstants.TRANSACTION_LIST_PAGE_SIZE));
     }
 
     @Step("Fetch transaction summary (unchecked)")
@@ -78,7 +77,9 @@ public class TransactionService extends BaseApiService {
 
     @Step("Fetch transactions without authentication")
     public ApiCallResult<TransactionPageResponse> fetchListUnauthorized() {
-        return fetchUnauthenticated(ApiEndpoints.TRANSACTIONS, Map.of("page", 0, "size", 10), TransactionPageResponse.class);
+        return fetchUnauthenticated(ApiEndpoints.TRANSACTIONS,
+                TestConstants.pagination(TestConstants.TRANSACTION_LIST_PAGE_SIZE),
+                TransactionPageResponse.class);
     }
 
     @Step("Attempt create transaction")
@@ -88,16 +89,16 @@ public class TransactionService extends BaseApiService {
 
     @Step("Fetch transaction by id {id} (unchecked)")
     public ApiCallResult<TransactionResponse> fetchById(long id) {
-        return attemptGet(ApiEndpoints.TRANSACTION_BY_ID.replace("{id}", String.valueOf(id)), TransactionResponse.class);
+        return attemptGet(ApiEndpoints.withPathParam(ApiEndpoints.TRANSACTION_BY_ID, "id", id), TransactionResponse.class);
     }
 
     @Step("Attempt update transaction {id}")
     public ApiCallResult<TransactionResponse> attemptUpdate(long id, UpdateTransactionRequest request) {
-        return attemptPut(ApiEndpoints.TRANSACTION_BY_ID.replace("{id}", String.valueOf(id)), request, TransactionResponse.class);
+        return attemptPut(ApiEndpoints.withPathParam(ApiEndpoints.TRANSACTION_BY_ID, "id", id), request, TransactionResponse.class);
     }
 
     @Step("Attempt delete transaction {id}")
     public ApiCallResult<Void> attemptDeleteById(long id) {
-        return super.attemptDelete(ApiEndpoints.TRANSACTION_BY_ID.replace("{id}", String.valueOf(id)));
+        return super.attemptDelete(ApiEndpoints.withPathParam(ApiEndpoints.TRANSACTION_BY_ID, "id", id));
     }
 }

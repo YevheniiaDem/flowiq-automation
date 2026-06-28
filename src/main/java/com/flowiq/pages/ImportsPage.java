@@ -3,6 +3,8 @@ package com.flowiq.pages;
 import com.flowiq.constants.TestIds;
 import com.flowiq.constants.UiPaths;
 import com.flowiq.pages.base.BasePage;
+import com.flowiq.pages.components.FileUploadComponent;
+import com.flowiq.pages.components.TableComponent;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 
@@ -10,51 +12,56 @@ import java.nio.file.Path;
 
 public class ImportsPage extends BasePage {
 
-  public ImportsPage(Page page) {
-    super(page);
-  }
+    private final FileUploadComponent fileUpload;
+    private final TableComponent historyTableComponent;
 
-  @Override
-  protected String getPath() {
-    return UiPaths.IMPORTS;
-  }
+    public ImportsPage(Page page) {
+        super(page);
+        this.fileUpload = new FileUploadComponent(page, TestIds.IMPORTS_FILE_INPUT, "input[type='file']");
+        this.historyTableComponent = new TableComponent(page, TestIds.IMPORTS_HISTORY_TABLE);
+    }
 
-  @Override
-  protected String getPageTestId() {
-    return TestIds.IMPORTS_PAGE;
-  }
+    @Override
+    protected String getPath() {
+        return UiPaths.IMPORTS;
+    }
 
-  public Locator uploadZone() {
-    return byTestId(TestIds.IMPORTS_UPLOAD_ZONE);
-  }
+    @Override
+    protected String getPageTestId() {
+        return TestIds.IMPORTS_PAGE;
+    }
 
-  public Locator browseButton() {
-    return byTestId(TestIds.IMPORTS_BROWSE_BTN);
-  }
+    public Locator uploadZone() {
+        return byTestId(TestIds.IMPORTS_UPLOAD_ZONE);
+    }
 
-  public Locator fileInput() {
-    return byTestIdOr(TestIds.IMPORTS_FILE_INPUT, "input[type='file']");
-  }
+    public Locator browseButton() {
+        return byTestId(TestIds.IMPORTS_BROWSE_BTN);
+    }
 
-  public Locator historyTable() {
-    return byTestId(TestIds.IMPORTS_HISTORY_TABLE);
-  }
+    public Locator fileInput() {
+        return fileUpload.input();
+    }
 
-  public Locator historyRows() {
-    return historyTable().locator("tbody tr");
-  }
+    public Locator historyTable() {
+        return historyTableComponent.root();
+    }
 
-  public ImportsPage uploadFile(Path filePath) {
-    fileInput().first().setInputFiles(filePath);
-    return this;
-  }
+    public Locator historyRows() {
+        return historyTableComponent.rows();
+    }
 
-  public ImportsPage clickBrowse() {
-    browseButton().click();
-    return this;
-  }
+    public ImportsPage uploadFile(Path filePath) {
+        fileUpload.upload(filePath);
+        return this;
+    }
 
-  public int getHistoryRowCount() {
-    return historyRows().count();
-  }
+    public ImportsPage clickBrowse() {
+        browseButton().click();
+        return this;
+    }
+
+    public int getHistoryRowCount() {
+        return historyTableComponent.rowCount();
+    }
 }

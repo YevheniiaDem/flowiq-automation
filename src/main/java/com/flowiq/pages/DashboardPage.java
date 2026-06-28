@@ -3,50 +3,54 @@ package com.flowiq.pages;
 import com.flowiq.constants.TestIds;
 import com.flowiq.constants.UiPaths;
 import com.flowiq.pages.base.BasePage;
+import com.flowiq.pages.components.ChartsComponent;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 
 public class DashboardPage extends BasePage {
 
-  public DashboardPage(Page page) {
-    super(page);
-  }
+    private final ChartsComponent chartWidgets;
 
-  @Override
-  protected String getPath() {
-    return UiPaths.DASHBOARD;
-  }
+    public DashboardPage(Page page) {
+        super(page);
+        this.chartWidgets = new ChartsComponent(page);
+    }
 
-  @Override
-  protected String getPageTestId() {
-    return TestIds.DASHBOARD_PAGE;
-  }
+    @Override
+    protected String getPath() {
+        return UiPaths.DASHBOARD;
+    }
 
-  public Locator statsGrid() {
-    return byTestId(TestIds.DASHBOARD_STATS);
-  }
+    @Override
+    protected String getPageTestId() {
+        return TestIds.DASHBOARD_PAGE;
+    }
 
-  public Locator mainContent() {
-    return byTestIdOr(TestIds.MAIN_CONTENT, "main");
-  }
+    public Locator statsGrid() {
+        return byTestId(TestIds.DASHBOARD_STATS);
+    }
 
-  public int getStatCardCount() {
-    return statsGrid().locator("> *").count();
-  }
+    public Locator mainContent() {
+        return header.mainContent();
+    }
 
-  public void waitForStatsLoaded() {
-    waitForVisible(statsGrid());
-  }
+    public int getStatCardCount() {
+        return statsGrid().locator("> *").count();
+    }
 
-  public Locator charts() {
-    return page.locator(".recharts-responsive-container");
-  }
+    public void waitForStatsLoaded() {
+        waitForVisible(statsGrid());
+    }
 
-  public int getChartCount() {
-    return charts().count();
-  }
+    public Locator charts() {
+        return chartWidgets.containers();
+    }
 
-  public void waitForChartsLoaded() {
-    waitForVisible(charts().first());
-  }
+    public int getChartCount() {
+        return chartWidgets.count();
+    }
+
+    public void waitForChartsLoaded() {
+        chartWidgets.waitUntilVisible();
+    }
 }

@@ -29,7 +29,7 @@ public class ProfileService extends BaseApiService {
 
     @Step("Get active sessions")
     public List<SessionResponse> getSessions() {
-        return get(ApiEndpoints.PROFILE_SESSIONS).getRaw().jsonPath().getList("", SessionResponse.class);
+        return getList(ApiEndpoints.PROFILE_SESSIONS, SessionResponse.class);
     }
 
     @Step("Fetch profile without authentication")

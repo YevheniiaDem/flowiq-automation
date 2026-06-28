@@ -9,6 +9,7 @@ import org.assertj.core.api.Assertions;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 public final class ApiAssertions {
@@ -43,7 +44,7 @@ public final class ApiAssertions {
     }
 
     public static void assertJsonFieldEquals(ApiResponse response, String jsonPath, Object expectedValue) {
-        Object actual = response.getRaw().jsonPath().get(jsonPath);
+        Object actual = response.jsonPath().get(jsonPath);
         Assertions.assertThat(actual)
                 .as("JSON field '%s'", jsonPath)
                 .isEqualTo(expectedValue);
@@ -57,7 +58,7 @@ public final class ApiAssertions {
     }
 
     public static void assertJsonFieldNotNull(ApiResponse response, String jsonPath) {
-        Object actual = response.getRaw().jsonPath().get(jsonPath);
+        Object actual = response.jsonPath().get(jsonPath);
         Assertions.assertThat(actual)
                 .as("JSON field '%s'", jsonPath)
                 .isNotNull();
@@ -87,6 +88,45 @@ public final class ApiAssertions {
         Assertions.assertThat(result.getBody())
                 .as("Response body")
                 .isNotNull();
+    }
+
+    public static void assertOk(ApiCallResult<?> result) {
+        assertStatusCode(result, 200);
+        assertThat(result.isSuccessful()).isTrue();
+    }
+
+    public static void assertCreated(ApiCallResult<?> result) {
+        assertStatusCode(result, 201);
+        assertThat(result.isSuccessful()).isTrue();
+    }
+
+    public static void assertNoContent(ApiCallResult<?> result) {
+        assertStatusCode(result, 204);
+    }
+
+    public static void assertUnauthorized(ApiCallResult<?> result) {
+        assertStatusCodeOneOf(result, 401, 403);
+        assertThat(result.isSuccessful()).isFalse();
+    }
+
+    public static void assertForbidden(ApiCallResult<?> result) {
+        assertStatusCodeOneOf(result, 403, 404);
+        assertThat(result.isSuccessful()).isFalse();
+    }
+
+    public static void assertValidationError(ApiCallResult<?> result) {
+        assertStatusCodeOneOf(result, 400, 422);
+        assertThat(result.isSuccessful()).isFalse();
+    }
+
+    public static void assertNotFound(ApiCallResult<?> result) {
+        assertStatusCodeOneOf(result, 404);
+        assertThat(result.isSuccessful()).isFalse();
+    }
+
+    public static void assertConflict(ApiCallResult<?> result) {
+        assertStatusCodeOneOf(result, 400, 409, 422);
+        assertThat(result.isSuccessful()).isFalse();
     }
 
     public static ApiResponse awaitStatusCode(Supplier<ApiResponse> requestSupplier,

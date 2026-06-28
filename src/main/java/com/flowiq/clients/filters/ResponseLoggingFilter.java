@@ -16,6 +16,7 @@ public class ResponseLoggingFilter implements Filter {
                            FilterableResponseSpecification responseSpec,
                            FilterContext ctx) {
         Response response = ctx.next(requestSpec, responseSpec);
+        String body = response.getBody().asString();
 
         log.info("<<< {} {} — {} ({} ms)",
                 requestSpec.getMethod(),
@@ -24,12 +25,12 @@ public class ResponseLoggingFilter implements Filter {
                 response.getTime());
 
         if (log.isDebugEnabled()) {
-            log.debug("Response body: {}", response.getBody().asString());
+            log.debug("Response body: {}", ApiLogSanitizer.sanitize(body));
         }
 
         Allure.addAttachment("Response", "text/plain",
                 response.getStatusCode() + " (" + response.getTime() + " ms)\n\n"
-                        + response.getBody().asString());
+                        + ApiLogSanitizer.sanitize(body));
 
         return response;
     }

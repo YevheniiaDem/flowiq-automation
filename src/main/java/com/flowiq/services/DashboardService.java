@@ -19,12 +19,12 @@ public class DashboardService extends BaseApiService {
 
     @Step("Get dashboard stats")
     public List<StatCardResponse> getStats() {
-        return get(ApiEndpoints.DASHBOARD_STATS).getRaw().jsonPath().getList("", StatCardResponse.class);
+        return getList(ApiEndpoints.DASHBOARD_STATS, StatCardResponse.class);
     }
 
     @Step("Get dashboard AI insights")
     public List<AIInsightResponse> getInsights() {
-        return get(ApiEndpoints.DASHBOARD_INSIGHTS).getRaw().jsonPath().getList("", AIInsightResponse.class);
+        return getList(ApiEndpoints.DASHBOARD_INSIGHTS, AIInsightResponse.class);
     }
 
     @Step("Get business health score")
@@ -39,12 +39,12 @@ public class DashboardService extends BaseApiService {
 
     @Step("Get revenue trend chart")
     public List<MonthlyAmountResponse> getRevenueTrend() {
-        return get(ApiEndpoints.DASHBOARD_CHARTS_REVENUE_TREND).getRaw().jsonPath().getList("", MonthlyAmountResponse.class);
+        return getList(ApiEndpoints.DASHBOARD_CHARTS_REVENUE_TREND, MonthlyAmountResponse.class);
     }
 
     @Step("Get expense breakdown chart")
     public List<CategoryAmountResponse> getExpenseBreakdown() {
-        return get(ApiEndpoints.DASHBOARD_CHARTS_EXPENSE_BREAKDOWN).getRaw().jsonPath().getList("", CategoryAmountResponse.class);
+        return getList(ApiEndpoints.DASHBOARD_CHARTS_EXPENSE_BREAKDOWN, CategoryAmountResponse.class);
     }
 
     @Step("Get forecast snapshot widget")

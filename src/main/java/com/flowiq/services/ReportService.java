@@ -2,7 +2,6 @@ package com.flowiq.services;
 
 import com.flowiq.clients.ApiCallResult;
 import com.flowiq.clients.ApiResponse;
-import com.flowiq.clients.BaseResponseSpecification;
 import com.flowiq.constants.ApiEndpoints;
 import com.flowiq.models.request.GenerateReportRequest;
 import com.flowiq.models.response.ReportJobResponse;
@@ -31,12 +30,12 @@ public class ReportService extends BaseApiService {
 
     @Step("Get report job by id {id}")
     public ReportJobResponse getById(long id) {
-        return getOk(ApiEndpoints.REPORT_BY_ID.replace("{id}", String.valueOf(id)), ReportJobResponse.class);
+        return getOk(ApiEndpoints.withPathParam(ApiEndpoints.REPORT_BY_ID, "id", id), ReportJobResponse.class);
     }
 
     @Step("Download report file {id}")
     public ApiResponse download(long id) {
-        return get(ApiEndpoints.REPORT_DOWNLOAD.replace("{id}", String.valueOf(id)));
+        return get(ApiEndpoints.withPathParam(ApiEndpoints.REPORT_DOWNLOAD, "id", id));
     }
 
     @Step("Fetch reports list (unchecked)")
@@ -71,6 +70,6 @@ public class ReportService extends BaseApiService {
 
     @Step("Fetch report by id {id} (unchecked)")
     public ApiCallResult<ReportJobResponse> fetchById(long id) {
-        return attemptGet(ApiEndpoints.REPORT_BY_ID.replace("{id}", String.valueOf(id)), ReportJobResponse.class);
+        return attemptGet(ApiEndpoints.withPathParam(ApiEndpoints.REPORT_BY_ID, "id", id), ReportJobResponse.class);
     }
 }

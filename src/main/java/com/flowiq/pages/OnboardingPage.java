@@ -1,42 +1,49 @@
 package com.flowiq.pages;
 
 import com.flowiq.constants.TestIds;
+import com.flowiq.constants.UiLocators;
+import com.flowiq.constants.UiPaths;
+import com.flowiq.pages.base.AbstractPage;
+import com.flowiq.pages.components.ModalComponent;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 
-public class OnboardingPage {
+public class OnboardingPage extends AbstractPage {
 
-    private final Page page;
+    private final ModalComponent welcomeModal;
+    private final ModalComponent whatsNewModal;
 
     public OnboardingPage(Page page) {
-        this.page = page;
+        super(page);
+        this.welcomeModal = new ModalComponent(page, TestIds.ONBOARDING_WELCOME_MODAL);
+        this.whatsNewModal = new ModalComponent(page, TestIds.WHATS_NEW_MODAL);
     }
 
     public Locator welcomeModal() {
-        return page.getByTestId(TestIds.ONBOARDING_WELCOME_MODAL);
+        return welcomeModal.root();
     }
 
     public Locator startTourButton() {
-        return page.getByTestId(TestIds.ONBOARDING_START_TOUR_BTN);
+        return byTestId(TestIds.ONBOARDING_START_TOUR_BTN);
     }
 
     public Locator skipButton() {
-        return page.getByTestId(TestIds.ONBOARDING_SKIP_BTN);
+        return byTestId(TestIds.ONBOARDING_SKIP_BTN);
     }
 
     public Locator activationChecklist() {
-        return page.getByTestId(TestIds.ACTIVATION_CHECKLIST);
+        return byTestId(TestIds.ACTIVATION_CHECKLIST);
     }
 
     public Locator whatsNewModal() {
-        return page.getByTestId(TestIds.WHATS_NEW_MODAL);
+        return whatsNewModal.root();
     }
 
     public Locator demoWorkspaceBanner() {
-        return page.getByTestId(TestIds.DEMO_WORKSPACE_BANNER);
+        return byTestId(TestIds.DEMO_WORKSPACE_BANNER);
     }
 
     public Locator driverPopover() {
-        return page.locator(".driver-popover");
+        return page.locator(UiLocators.ONBOARDING_DRIVER_POPOVER);
     }
 }

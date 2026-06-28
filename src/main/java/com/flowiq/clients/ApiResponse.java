@@ -1,5 +1,7 @@
 package com.flowiq.clients;
 
+import com.flowiq.utils.JsonUtils;
+import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +28,16 @@ public final class ApiResponse {
         return raw.getBody().asString();
     }
 
+    public JsonPath jsonPath() {
+        return raw.jsonPath();
+    }
+
     public <T> T as(Class<T> clazz) {
-        return raw.as(clazz);
+        String body = getBodyAsString();
+        if (body == null || body.isBlank()) {
+            return null;
+        }
+        return JsonUtils.fromJson(body, clazz);
     }
 
     public boolean isSuccessful() {

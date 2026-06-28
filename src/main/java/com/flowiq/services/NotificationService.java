@@ -3,6 +3,7 @@ package com.flowiq.services;
 import com.flowiq.clients.ApiCallResult;
 import com.flowiq.clients.BaseResponseSpecification;
 import com.flowiq.constants.ApiEndpoints;
+import com.flowiq.constants.TestConstants;
 import com.flowiq.models.notifications.MarkNotificationReadRequest;
 import com.flowiq.models.notifications.NotificationPageResponse;
 import com.flowiq.models.notifications.NotificationSummaryResponse;
@@ -19,7 +20,7 @@ public class NotificationService extends BaseApiService {
 
     @Step("List notifications (default pagination)")
     public NotificationPageResponse list() {
-        return list(Map.of("page", 0, "size", 20));
+        return list(TestConstants.pagination(TestConstants.DEFAULT_PAGE_SIZE));
     }
 
     @Step("Get unread notifications count")
@@ -35,7 +36,7 @@ public class NotificationService extends BaseApiService {
     @Step("Mark notification {id} as read")
     public void markAsRead(long id) {
         BaseResponseSpecification.validate(
-                put(ApiEndpoints.NOTIFICATION_READ.replace("{id}", String.valueOf(id)),
+                put(ApiEndpoints.withPathParam(ApiEndpoints.NOTIFICATION_READ, "id", id),
                         new MarkNotificationReadRequest()),
                 200);
     }
@@ -52,7 +53,7 @@ public class NotificationService extends BaseApiService {
 
     @Step("Delete notification {id}")
     public void deleteById(long id) {
-        deleteNoContent(ApiEndpoints.NOTIFICATION_BY_ID.replace("{id}", String.valueOf(id)));
+        deleteNoContent(ApiEndpoints.withPathParam(ApiEndpoints.NOTIFICATION_BY_ID, "id", id));
     }
 
     @Step("Fetch notifications (unchecked)")
@@ -62,12 +63,14 @@ public class NotificationService extends BaseApiService {
 
     @Step("Fetch notifications (unchecked, default pagination)")
     public ApiCallResult<NotificationPageResponse> fetchList() {
-        return fetchList(Map.of("page", 0, "size", 20));
+        return fetchList(TestConstants.pagination(TestConstants.DEFAULT_PAGE_SIZE));
     }
 
     @Step("Fetch notifications without authentication")
     public ApiCallResult<NotificationPageResponse> fetchListUnauthorized() {
-        return fetchUnauthenticated(ApiEndpoints.NOTIFICATIONS, Map.of("page", 0, "size", 20), NotificationPageResponse.class);
+        return fetchUnauthenticated(ApiEndpoints.NOTIFICATIONS,
+                TestConstants.pagination(TestConstants.DEFAULT_PAGE_SIZE),
+                NotificationPageResponse.class);
     }
 
     @Step("Fetch notifications summary (unchecked)")
@@ -87,12 +90,12 @@ public class NotificationService extends BaseApiService {
 
     @Step("Attempt mark notification {id} as read")
     public ApiCallResult<Void> attemptMarkAsRead(long id) {
-        return attemptPut(ApiEndpoints.NOTIFICATION_READ.replace("{id}", String.valueOf(id)),
+        return attemptPut(ApiEndpoints.withPathParam(ApiEndpoints.NOTIFICATION_READ, "id", id),
                 new MarkNotificationReadRequest(), Void.class);
     }
 
     @Step("Attempt delete notification {id}")
     public ApiCallResult<Void> attemptDeleteById(long id) {
-        return super.attemptDelete(ApiEndpoints.NOTIFICATION_BY_ID.replace("{id}", String.valueOf(id)));
+        return super.attemptDelete(ApiEndpoints.withPathParam(ApiEndpoints.NOTIFICATION_BY_ID, "id", id));
     }
 }

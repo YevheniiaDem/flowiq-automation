@@ -3,58 +3,62 @@ package com.flowiq.pages;
 import com.flowiq.constants.TestIds;
 import com.flowiq.constants.UiPaths;
 import com.flowiq.pages.base.BasePage;
+import com.flowiq.pages.components.SearchInputComponent;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 
 public class BusinessGuidePage extends BasePage {
 
-  public BusinessGuidePage(Page page) {
-    super(page);
-  }
+    private final SearchInputComponent search;
 
-  @Override
-  protected String getPath() {
-    return UiPaths.BUSINESS_GUIDE;
-  }
+    public BusinessGuidePage(Page page) {
+        super(page);
+        this.search = new SearchInputComponent(page, TestIds.BUSINESS_GUIDE_SEARCH);
+    }
 
-  @Override
-  protected String getPageTestId() {
-    return TestIds.BUSINESS_GUIDE_PAGE;
-  }
+    @Override
+    protected String getPath() {
+        return UiPaths.BUSINESS_GUIDE;
+    }
 
-  public Locator searchInput() {
-    return byTestId(TestIds.BUSINESS_GUIDE_SEARCH);
-  }
+    @Override
+    protected String getPageTestId() {
+        return TestIds.BUSINESS_GUIDE_PAGE;
+    }
 
-  public BusinessGuidePage search(String query) {
-    searchInput().fill(query);
-    return this;
-  }
+    public Locator searchInput() {
+        return search.input();
+    }
 
-  public BusinessGuidePage clearSearch() {
-    searchInput().clear();
-    return this;
-  }
+    public BusinessGuidePage search(String query) {
+        search.fill(query);
+        return this;
+    }
 
-  public Locator searchResults() {
-    return page.locator("[data-testid='business-guide-search-results'], .absolute.left-0.right-0");
-  }
+    public BusinessGuidePage clearSearch() {
+        search.clear();
+        return this;
+    }
 
-  public boolean hasSearchResults() {
-    return searchResults().isVisible();
-  }
+    public Locator searchResults() {
+        return page.locator("[data-testid='business-guide-search-results'], .absolute.left-0.right-0");
+    }
 
-  public Locator articleLinks() {
-    return page.locator("a[href*='/business-guide/articles/']");
-  }
+    public boolean hasSearchResults() {
+        return searchResults().isVisible();
+    }
 
-  public BusinessGuidePage openFirstArticle() {
-    articleLinks().first().click();
-    waitForDomReady();
-    return this;
-  }
+    public Locator articleLinks() {
+        return page.locator("a[href*='/business-guide/articles/']");
+    }
 
-  public boolean isArticleDetailVisible() {
-    return page.locator("article").isVisible();
-  }
+    public BusinessGuidePage openFirstArticle() {
+        articleLinks().first().click();
+        waitForDomReady();
+        return this;
+    }
+
+    public boolean isArticleDetailVisible() {
+        return page.locator("article").isVisible();
+    }
 }

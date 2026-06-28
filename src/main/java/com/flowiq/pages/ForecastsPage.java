@@ -1,56 +1,61 @@
 package com.flowiq.pages;
 
 import com.flowiq.constants.TestIds;
+import com.flowiq.constants.UiLocators;
 import com.flowiq.constants.UiPaths;
 import com.flowiq.pages.base.BasePage;
+import com.flowiq.pages.components.ChartsComponent;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 
 public class ForecastsPage extends BasePage {
 
-  public ForecastsPage(Page page) {
-    super(page);
-  }
+    private final ChartsComponent chartWidgets;
 
-  @Override
-  protected String getPath() {
-    return UiPaths.FORECASTS;
-  }
+    public ForecastsPage(Page page) {
+        super(page);
+        this.chartWidgets = new ChartsComponent(page);
+    }
 
-  @Override
-  protected String getPageTestId() {
-    return TestIds.FORECASTS_PAGE;
-  }
+    @Override
+    protected String getPath() {
+        return UiPaths.FORECASTS;
+    }
 
-  public Locator summaryCards() {
-    return byTestId(TestIds.FORECASTS_SUMMARY_CARDS);
-  }
+    @Override
+    protected String getPageTestId() {
+        return TestIds.FORECASTS_PAGE;
+    }
 
-  public Locator warningBanners() {
-    return page.locator("[data-testid='forecasts-warnings'], .space-y-2 > div");
-  }
+    public Locator summaryCards() {
+        return byTestId(TestIds.FORECASTS_SUMMARY_CARDS);
+    }
 
-  public int getSummaryCardCount() {
-    return summaryCards().locator("> *").count();
-  }
+    public Locator warningBanners() {
+        return byTestIdOr("forecasts-warnings", UiLocators.FORECASTS_WARNINGS_FALLBACK);
+    }
 
-  public void waitForSummaryLoaded() {
-    waitForVisible(summaryCards());
-  }
+    public int getSummaryCardCount() {
+        return summaryCards().locator("> *").count();
+    }
 
-  public Locator charts() {
-    return page.locator(".recharts-responsive-container");
-  }
+    public void waitForSummaryLoaded() {
+        waitForVisible(summaryCards());
+    }
 
-  public int getChartCount() {
-    return charts().count();
-  }
+    public Locator charts() {
+        return chartWidgets.containers();
+    }
 
-  public boolean hasWarnings() {
-    return warningBanners().count() > 0;
-  }
+    public int getChartCount() {
+        return chartWidgets.count();
+    }
 
-  public void waitForChartsLoaded() {
-    waitForVisible(charts().first());
-  }
+    public boolean hasWarnings() {
+        return warningBanners().count() > 0;
+    }
+
+    public void waitForChartsLoaded() {
+        chartWidgets.waitUntilVisible();
+    }
 }

@@ -21,20 +21,16 @@ public class RequestLoggingFilter implements Filter {
         log.info(">>> {} {}", method, uri);
 
         if (log.isDebugEnabled()) {
-            log.debug("Request headers: {}", requestSpec.getHeaders());
+            log.debug("Request headers: {}", ApiLogSanitizer.sanitize(String.valueOf(requestSpec.getHeaders())));
             Object body = requestSpec.getBody();
             if (body != null) {
-                log.debug("Request body: {}", safeBody(body));
+                log.debug("Request body: {}", ApiLogSanitizer.sanitize(body));
             }
         }
 
         Allure.addAttachment("Request", "text/plain",
-                method + " " + uri + "\n\n" + safeBody(requestSpec.getBody()));
+                method + " " + uri + "\n\n" + ApiLogSanitizer.sanitize(requestSpec.getBody()));
 
         return ctx.next(requestSpec, responseSpec);
-    }
-
-    private String safeBody(Object body) {
-        return body != null ? body.toString() : "";
     }
 }

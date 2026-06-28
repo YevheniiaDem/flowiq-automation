@@ -3,6 +3,7 @@ package com.flowiq.pages;
 import com.flowiq.constants.TestIds;
 import com.flowiq.constants.UiPaths;
 import com.flowiq.pages.base.BasePage;
+import com.flowiq.pages.components.DropdownComponent;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 
@@ -42,7 +43,7 @@ public class SettingsPage extends BasePage {
     }
 
     public SettingsPage openTab(String tabName) {
-        tab(tabName).click();
+        new DropdownComponent(page, tab(tabName)).open();
         return this;
     }
 

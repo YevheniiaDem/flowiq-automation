@@ -52,18 +52,18 @@ public final class BaseResponseSpecification {
         }
     }
 
-    @Step("Extract response body as {type.simpleName}")
+    @Step("Extract response body with expected status {expectedStatus}")
     public static <T> T extract(ApiResponse response, Class<T> type, int expectedStatus) {
         validate(response, expectedStatus);
         return response.as(type);
     }
 
-    @Step("Extract successful response body as {type.simpleName}")
+    @Step("Extract successful response body")
     public static <T> T extractOk(ApiResponse response, Class<T> type) {
         return extract(response, type, 200);
     }
 
-    @Step("Extract created response body as {type.simpleName}")
+    @Step("Extract created response body")
     public static <T> T extractCreated(ApiResponse response, Class<T> type) {
         return extract(response, type, 201);
     }

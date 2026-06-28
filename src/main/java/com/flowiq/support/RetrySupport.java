@@ -47,13 +47,17 @@ public final class RetrySupport {
     }
 
     public static ApiResponse executeApi(Supplier<ApiResponse> action, int maxAttempts, long delayMs) {
-        return execute(() -> {
-            ApiResponse response = action.get();
-            if (shouldRetry(response)) {
-                throw new RetryableApiException("Retryable status: " + response.getStatusCode());
+        ApiResponse lastResponse = null;
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            lastResponse = action.get();
+            if (!shouldRetry(lastResponse) || attempt == maxAttempts) {
+                return lastResponse;
             }
-            return response;
-        }, maxAttempts, delayMs);
+            log.warn("Attempt {}/{}: retryable status {}. Retrying in {} ms...",
+                    attempt, maxAttempts, lastResponse.getStatusCode(), delayMs);
+            sleep(delayMs);
+        }
+        return lastResponse;
     }
 
     public static ApiResponse executeApiUntil(Supplier<ApiResponse> action,

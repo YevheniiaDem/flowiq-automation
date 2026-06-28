@@ -21,17 +21,17 @@ public class AnalyticsService extends BaseApiService {
 
     @Step("Get revenue trend")
     public List<MonthlyAmountResponse> getRevenueTrend() {
-        return get(ApiEndpoints.ANALYTICS_REVENUE_TREND).getRaw().jsonPath().getList("", MonthlyAmountResponse.class);
+        return getList(ApiEndpoints.ANALYTICS_REVENUE_TREND, MonthlyAmountResponse.class);
     }
 
     @Step("Get expense breakdown")
     public List<CategoryAmountResponse> getExpenseBreakdown() {
-        return get(ApiEndpoints.ANALYTICS_EXPENSE_BREAKDOWN).getRaw().jsonPath().getList("", CategoryAmountResponse.class);
+        return getList(ApiEndpoints.ANALYTICS_EXPENSE_BREAKDOWN, CategoryAmountResponse.class);
     }
 
     @Step("Get profit trend")
     public List<MonthlyAmountResponse> getProfitTrend() {
-        return get(ApiEndpoints.ANALYTICS_PROFIT_TREND).getRaw().jsonPath().getList("", MonthlyAmountResponse.class);
+        return getList(ApiEndpoints.ANALYTICS_PROFIT_TREND, MonthlyAmountResponse.class);
     }
 
     @Step("Get FOP tax insights")
@@ -41,7 +41,7 @@ public class AnalyticsService extends BaseApiService {
 
     @Step("Get income vs expenses comparison")
     public List<MonthlyComparisonResponse> getIncomeVsExpenses() {
-        return get(ApiEndpoints.ANALYTICS_INCOME_VS_EXPENSES).getRaw().jsonPath().getList("", MonthlyComparisonResponse.class);
+        return getList(ApiEndpoints.ANALYTICS_INCOME_VS_EXPENSES, MonthlyComparisonResponse.class);
     }
 
     @Step("Get analytics overview with filters")

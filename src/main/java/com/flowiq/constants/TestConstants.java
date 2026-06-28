@@ -13,7 +13,13 @@ public final class TestConstants {
     public static final String DEFAULT_CURRENCY = "UAH";
 
     public static final String DEFAULT_LOCALE = "uk-UA";
+    public static final int DEFAULT_PAGE = 0;
     public static final int DEFAULT_PAGE_SIZE = 20;
+    public static final int TRANSACTION_LIST_PAGE_SIZE = 10;
+
+    public static java.util.Map<String, Integer> pagination(int pageSize) {
+        return java.util.Map.of("page", DEFAULT_PAGE, "size", pageSize);
+    }
 
     private TestConstants() {
     }

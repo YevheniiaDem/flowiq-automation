@@ -6,8 +6,6 @@ import com.flowiq.clients.ApiCallResult;
 import com.flowiq.models.response.AuthResponse;
 import org.testng.annotations.BeforeMethod;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public abstract class BaseSmokeApiTest extends BaseApiTest {
 
     @BeforeMethod(alwaysRun = true)
@@ -18,13 +16,11 @@ public abstract class BaseSmokeApiTest extends BaseApiTest {
     }
 
     protected void assertUnauthorized(ApiCallResult<?> result) {
-        ApiAssertions.assertStatusCodeOneOf(result, 401, 403);
-        assertThat(result.isSuccessful()).isFalse();
+        ApiAssertions.assertUnauthorized(result);
     }
 
     protected void assertValidationError(ApiCallResult<?> result) {
-        ApiAssertions.assertStatusCodeOneOf(result, 400, 422);
-        assertThat(result.isSuccessful()).isFalse();
+        ApiAssertions.assertValidationError(result);
     }
 
     protected void assertMatchesSchema(ApiCallResult<?> result, String schemaPath) {
@@ -32,8 +28,7 @@ public abstract class BaseSmokeApiTest extends BaseApiTest {
     }
 
     protected void assertHappyPath(ApiCallResult<?> result) {
-        ApiAssertions.assertStatusCode(result, 200);
-        assertThat(result.isSuccessful()).isTrue();
+        ApiAssertions.assertOk(result);
     }
 
     protected AuthResponse reLogin() {

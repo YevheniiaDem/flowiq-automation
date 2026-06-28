@@ -3,6 +3,7 @@ package com.flowiq.services;
 import com.flowiq.clients.ApiCallResult;
 import com.flowiq.clients.BaseResponseSpecification;
 import com.flowiq.constants.ApiEndpoints;
+import com.flowiq.constants.TestConstants;
 import com.flowiq.models.tasks.CreateTaskRequest;
 import com.flowiq.models.tasks.TaskListResponse;
 import com.flowiq.models.tasks.TaskPageResponse;
@@ -23,17 +24,17 @@ public class TaskService extends BaseApiService {
 
     @Step("List tasks (default pagination)")
     public TaskPageResponse list() {
-        return list(Map.of("page", 0, "size", 20));
+        return list(TestConstants.pagination(TestConstants.DEFAULT_PAGE_SIZE));
     }
 
     @Step("Get tasks due today")
     public List<TaskResponse> getToday() {
-        return get(ApiEndpoints.TASKS_TODAY).getRaw().jsonPath().getList("", TaskResponse.class);
+        return getList(ApiEndpoints.TASKS_TODAY, TaskResponse.class);
     }
 
     @Step("Get upcoming tasks")
     public List<TaskResponse> getUpcoming() {
-        return get(ApiEndpoints.TASKS_UPCOMING).getRaw().jsonPath().getList("", TaskResponse.class);
+        return getList(ApiEndpoints.TASKS_UPCOMING, TaskResponse.class);
     }
 
     @Step("Get grouped tasks")
@@ -43,7 +44,7 @@ public class TaskService extends BaseApiService {
 
     @Step("Get task suggestions")
     public List<TaskSuggestionResponse> getSuggestions() {
-        return get(ApiEndpoints.TASKS_SUGGESTIONS).getRaw().jsonPath().getList("", TaskSuggestionResponse.class);
+        return getList(ApiEndpoints.TASKS_SUGGESTIONS, TaskSuggestionResponse.class);
     }
 
     @Step("Create task")
@@ -54,20 +55,20 @@ public class TaskService extends BaseApiService {
     @Step("Update task {id}")
     public TaskResponse update(long id, UpdateTaskRequest request) {
         return BaseResponseSpecification.extractOk(
-                put(ApiEndpoints.TASK_BY_ID.replace("{id}", String.valueOf(id)), request),
+                put(ApiEndpoints.withPathParam(ApiEndpoints.TASK_BY_ID, "id", id), request),
                 TaskResponse.class);
     }
 
     @Step("Complete task {id}")
     public TaskResponse complete(long id) {
         return BaseResponseSpecification.extractOk(
-                put(ApiEndpoints.TASK_COMPLETE.replace("{id}", String.valueOf(id))),
+                put(ApiEndpoints.withPathParam(ApiEndpoints.TASK_COMPLETE, "id", id)),
                 TaskResponse.class);
     }
 
     @Step("Delete task {id}")
     public void deleteById(long id) {
-        deleteNoContent(ApiEndpoints.TASK_BY_ID.replace("{id}", String.valueOf(id)));
+        deleteNoContent(ApiEndpoints.withPathParam(ApiEndpoints.TASK_BY_ID, "id", id));
     }
 
     @Step("Fetch tasks list (unchecked)")
@@ -77,12 +78,13 @@ public class TaskService extends BaseApiService {
 
     @Step("Fetch tasks list (unchecked, default pagination)")
     public ApiCallResult<TaskPageResponse> fetchList() {
-        return fetchList(Map.of("page", 0, "size", 20));
+        return fetchList(TestConstants.pagination(TestConstants.DEFAULT_PAGE_SIZE));
     }
 
     @Step("Fetch tasks without authentication")
     public ApiCallResult<TaskPageResponse> fetchListUnauthorized() {
-        return fetchUnauthenticated(ApiEndpoints.TASKS, Map.of("page", 0, "size", 20), TaskPageResponse.class);
+        return fetchUnauthenticated(ApiEndpoints.TASKS, TestConstants.pagination(TestConstants.DEFAULT_PAGE_SIZE),
+                TaskPageResponse.class);
     }
 
     @Step("Attempt create task")
@@ -102,16 +104,16 @@ public class TaskService extends BaseApiService {
 
     @Step("Attempt update task {id}")
     public ApiCallResult<TaskResponse> attemptUpdate(long id, UpdateTaskRequest request) {
-        return attemptPut(ApiEndpoints.TASK_BY_ID.replace("{id}", String.valueOf(id)), request, TaskResponse.class);
+        return attemptPut(ApiEndpoints.withPathParam(ApiEndpoints.TASK_BY_ID, "id", id), request, TaskResponse.class);
     }
 
     @Step("Attempt complete task {id}")
     public ApiCallResult<TaskResponse> attemptComplete(long id) {
-        return attemptPut(ApiEndpoints.TASK_COMPLETE.replace("{id}", String.valueOf(id)), TaskResponse.class);
+        return attemptPut(ApiEndpoints.withPathParam(ApiEndpoints.TASK_COMPLETE, "id", id), TaskResponse.class);
     }
 
     @Step("Attempt delete task {id}")
     public ApiCallResult<Void> attemptDeleteById(long id) {
-        return super.attemptDelete(ApiEndpoints.TASK_BY_ID.replace("{id}", String.valueOf(id)));
+        return super.attemptDelete(ApiEndpoints.withPathParam(ApiEndpoints.TASK_BY_ID, "id", id));
     }
 }

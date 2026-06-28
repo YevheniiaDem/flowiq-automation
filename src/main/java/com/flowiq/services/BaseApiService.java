@@ -1,17 +1,16 @@
 package com.flowiq.services;
 
 import com.flowiq.clients.ApiCallResult;
+import com.flowiq.clients.ApiRequestExecutor;
 import com.flowiq.clients.ApiResponse;
 import com.flowiq.clients.BaseRequestSpecification;
 import com.flowiq.clients.BaseResponseSpecification;
-import com.flowiq.support.RetrySupport;
 import io.qameta.allure.Step;
 import io.restassured.specification.RequestSpecification;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
-
-import static io.restassured.RestAssured.given;
 
 public abstract class BaseApiService {
 
@@ -21,16 +20,7 @@ public abstract class BaseApiService {
 
     @Step("GET {path} with query params")
     protected ApiResponse get(String path, Map<String, ?> queryParams) {
-        return RetrySupport.executeApi(() -> {
-            ApiResponse response = ApiResponse.from(
-                    given()
-                            .spec(authenticatedSpec())
-                            .queryParams(queryParams)
-                            .when()
-                            .get(path)
-            );
-            return response;
-        });
+        return ApiRequestExecutor.get(authenticatedSpec(), path, queryParams);
     }
 
     @Step("GET {path} (public)")
@@ -45,98 +35,55 @@ public abstract class BaseApiService {
 
     @Step("GET {path} (unauthenticated) with query params")
     protected ApiResponse getUnauthenticated(String path, Map<String, ?> queryParams) {
-        return RetrySupport.executeApi(() -> ApiResponse.from(
-                given()
-                        .spec(BaseRequestSpecification.base())
-                        .queryParams(queryParams)
-                        .when()
-                        .get(path)
-        ));
+        return ApiRequestExecutor.get(baseSpec(), path, queryParams);
     }
 
     @Step("POST {path} (unauthenticated)")
     protected ApiResponse postUnauthenticated(String path, Object body) {
-        return RetrySupport.executeApi(() -> ApiResponse.from(
-                given()
-                        .spec(BaseRequestSpecification.base())
-                        .body(body)
-                        .when()
-                        .post(path)
-        ));
+        return ApiRequestExecutor.post(baseSpec(), path, body);
     }
 
     @Step("POST {path}")
     protected ApiResponse post(String path, Object body) {
-        return RetrySupport.executeApi(() -> ApiResponse.from(
-                given()
-                        .spec(authenticatedSpec())
-                        .body(body)
-                        .when()
-                        .post(path)
-        ));
+        return ApiRequestExecutor.post(authenticatedSpec(), path, body);
     }
 
     @Step("POST {path} (public)")
     protected ApiResponse postPublic(String path, Object body) {
-        return RetrySupport.executeApi(() -> ApiResponse.from(
-                given()
-                        .spec(BaseRequestSpecification.base())
-                        .body(body)
-                        .when()
-                        .post(path)
-        ));
+        return postUnauthenticated(path, body);
     }
 
     @Step("POST {path} without body")
     protected ApiResponse post(String path) {
-        return RetrySupport.executeApi(() -> ApiResponse.from(
-                given()
-                        .spec(authenticatedSpec())
-                        .when()
-                        .post(path)
-        ));
+        return ApiRequestExecutor.post(authenticatedSpec(), path, null);
     }
 
     @Step("PUT {path}")
     protected ApiResponse put(String path, Object body) {
-        return RetrySupport.executeApi(() -> ApiResponse.from(
-                given()
-                        .spec(authenticatedSpec())
-                        .body(body)
-                        .when()
-                        .put(path)
-        ));
+        return ApiRequestExecutor.put(authenticatedSpec(), path, body);
     }
 
     @Step("PUT {path} without body")
     protected ApiResponse put(String path) {
-        return RetrySupport.executeApi(() -> ApiResponse.from(
-                given()
-                        .spec(authenticatedSpec())
-                        .when()
-                        .put(path)
-        ));
+        return ApiRequestExecutor.put(authenticatedSpec(), path);
     }
 
     @Step("DELETE {path}")
     protected ApiResponse delete(String path) {
-        return RetrySupport.executeApi(() -> ApiResponse.from(
-                given()
-                        .spec(authenticatedSpec())
-                        .when()
-                        .delete(path)
-        ));
+        return ApiRequestExecutor.delete(authenticatedSpec(), path);
     }
 
     @Step("POST multipart {path}")
     protected ApiResponse postMultipart(String path, File file) {
-        return RetrySupport.executeApi(() -> ApiResponse.from(
-                given()
-                        .spec(BaseRequestSpecification.multipart())
-                        .multiPart("file", file)
-                        .when()
-                        .post(path)
-        ));
+        return ApiRequestExecutor.postMultipart(multipartSpec(), path, file);
+    }
+
+    protected <T> List<T> getList(String path, Class<T> itemType) {
+        return get(path).jsonPath().getList("", itemType);
+    }
+
+    protected <T> List<T> getList(String path, Map<String, ?> queryParams, Class<T> itemType) {
+        return get(path, queryParams).jsonPath().getList("", itemType);
     }
 
     protected <T> T getOk(String path, Class<T> type) {
@@ -209,5 +156,13 @@ public abstract class BaseApiService {
 
     private RequestSpecification authenticatedSpec() {
         return BaseRequestSpecification.authenticated();
+    }
+
+    private RequestSpecification baseSpec() {
+        return BaseRequestSpecification.base();
+    }
+
+    private RequestSpecification multipartSpec() {
+        return BaseRequestSpecification.multipart();
     }
 }

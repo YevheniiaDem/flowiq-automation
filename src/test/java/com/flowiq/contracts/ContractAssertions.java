@@ -3,7 +3,6 @@ package com.flowiq.contracts;
 import com.flowiq.assertions.ApiAssertions;
 import com.flowiq.clients.ApiCallResult;
 import com.flowiq.clients.ApiResponse;
-import com.flowiq.validation.JsonSchemaValidator;
 import io.qameta.allure.Step;
 import org.assertj.core.api.Assertions;
 
@@ -25,12 +24,12 @@ public final class ContractAssertions {
 
     @Step("Validate response schema: {schemaPath}")
     public static void assertSchemaValid(ApiCallResult<?> result, String schemaPath) {
-        JsonSchemaValidator.validate(result, schemaPath);
+        ApiAssertions.assertMatchesSchema(result, schemaPath);
     }
 
     @Step("Validate response schema: {schemaPath}")
     public static void assertSchemaValid(ApiResponse response, String schemaPath) {
-        JsonSchemaValidator.validate(response, schemaPath);
+        ApiAssertions.assertMatchesSchema(response, schemaPath);
     }
 
     @Step("Assert required JSON fields present: {jsonPaths}")

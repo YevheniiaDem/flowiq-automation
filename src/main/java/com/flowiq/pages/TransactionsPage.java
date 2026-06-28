@@ -3,6 +3,10 @@ package com.flowiq.pages;
 import com.flowiq.constants.TestIds;
 import com.flowiq.constants.UiPaths;
 import com.flowiq.pages.base.BasePage;
+import com.flowiq.pages.components.FileUploadComponent;
+import com.flowiq.pages.components.ModalComponent;
+import com.flowiq.pages.components.SearchInputComponent;
+import com.flowiq.pages.components.TableComponent;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 
@@ -10,92 +14,100 @@ import java.nio.file.Path;
 
 public class TransactionsPage extends BasePage {
 
-  public TransactionsPage(Page page) {
-    super(page);
-  }
+    private final SearchInputComponent search;
+    private final TableComponent transactionTable;
+    private final FileUploadComponent importUpload;
+    private final ModalComponent transactionForm;
 
-  @Override
-  protected String getPath() {
-    return UiPaths.TRANSACTIONS;
-  }
+    public TransactionsPage(Page page) {
+        super(page);
+        this.search = new SearchInputComponent(page, TestIds.TRANSACTIONS_SEARCH, "input[type='search']");
+        this.transactionTable = new TableComponent(page, TestIds.TRANSACTIONS_TABLE);
+        this.importUpload = new FileUploadComponent(page, TestIds.TRANSACTIONS_IMPORT_INPUT, "input[type='file']");
+        this.transactionForm = new ModalComponent(page, TestIds.TRANSACTION_FORM_MODAL);
+    }
 
-  @Override
-  protected String getPageTestId() {
-    return TestIds.TRANSACTIONS_PAGE;
-  }
+    @Override
+    protected String getPath() {
+        return UiPaths.TRANSACTIONS;
+    }
 
-  public Locator addButton() {
-    return byTestId(TestIds.TRANSACTIONS_ADD_BTN);
-  }
+    @Override
+    protected String getPageTestId() {
+        return TestIds.TRANSACTIONS_PAGE;
+    }
 
-  public Locator importButton() {
-    return byTestId(TestIds.TRANSACTIONS_IMPORT_BTN);
-  }
+    public Locator addButton() {
+        return byTestId(TestIds.TRANSACTIONS_ADD_BTN);
+    }
 
-  public Locator exportButton() {
-    return byTestId(TestIds.TRANSACTIONS_EXPORT_BTN);
-  }
+    public Locator importButton() {
+        return byTestId(TestIds.TRANSACTIONS_IMPORT_BTN);
+    }
 
-  public Locator searchInput() {
-    return byTestIdOr(TestIds.TRANSACTIONS_SEARCH, "input[type='search']");
-  }
+    public Locator exportButton() {
+        return byTestId(TestIds.TRANSACTIONS_EXPORT_BTN);
+    }
 
-  public Locator filters() {
-    return byTestId(TestIds.TRANSACTIONS_FILTERS);
-  }
+    public Locator searchInput() {
+        return search.input();
+    }
 
-  public Locator table() {
-    return byTestId(TestIds.TRANSACTIONS_TABLE);
-  }
+    public Locator filters() {
+        return byTestId(TestIds.TRANSACTIONS_FILTERS);
+    }
 
-  public Locator tableRows() {
-    return table().locator("tbody tr");
-  }
+    public Locator table() {
+        return transactionTable.root();
+    }
 
-  public TransactionsPage clickAddTransaction() {
-    addButton().click();
-    return this;
-  }
+    public Locator tableRows() {
+        return transactionTable.rows();
+    }
 
-  public TransactionsPage search(String query) {
-    searchInput().fill(query);
-    return this;
-  }
+    public TransactionsPage clickAddTransaction() {
+        addButton().click();
+        return this;
+    }
 
-  public TransactionsPage clearSearch() {
-    searchInput().clear();
-    return this;
-  }
+    public TransactionsPage search(String query) {
+        search.fill(query);
+        return this;
+    }
 
-  public TransactionsPage importCsv(Path filePath) {
-    fileInput().setInputFiles(filePath);
-    return this;
-  }
+    public TransactionsPage clearSearch() {
+        search.clear();
+        return this;
+    }
 
-  public Locator fileInput() {
-    return byTestIdOr(TestIds.TRANSACTIONS_IMPORT_INPUT, "input[type='file']").first();
-  }
+    public TransactionsPage importCsv(Path filePath) {
+        importUpload.upload(filePath);
+        return this;
+    }
 
-  public TransactionsPage exportCsv() {
-    exportButton().click();
-    return this;
-  }
+    public Locator fileInput() {
+        return importUpload.input();
+    }
 
-  public int getTransactionRowCount() {
-    return tableRows().count();
-  }
+    public TransactionsPage exportCsv() {
+        exportButton().click();
+        return this;
+    }
 
-  public TransactionsPage createTransaction(String amount, String description) {
-    clickAddTransaction();
-    waitForVisible(byTestId(TestIds.TRANSACTION_FORM_MODAL));
-    byTestId(TestIds.TRANSACTION_FORM_AMOUNT).fill(amount);
-    byTestId(TestIds.TRANSACTION_FORM_DESCRIPTION).fill(description);
-    byTestId(TestIds.TRANSACTION_FORM_SUBMIT).click();
-    waitForHidden(byTestId(TestIds.TRANSACTION_FORM_MODAL));
-    return this;
-  }
+    public int getTransactionRowCount() {
+        return transactionTable.rowCount();
+    }
 
-  public boolean containsTransactionText(String text) {
-    return table().getByText(text).isVisible();
-  }
+    public TransactionsPage createTransaction(String amount, String description) {
+        clickAddTransaction();
+        transactionForm.waitUntilVisible();
+        transactionForm.fillField(TestIds.TRANSACTION_FORM_AMOUNT, amount);
+        transactionForm.fillField(TestIds.TRANSACTION_FORM_DESCRIPTION, description);
+        transactionForm.submit(TestIds.TRANSACTION_FORM_SUBMIT);
+        return this;
+    }
+
+    public boolean containsTransactionText(String text) {
+        return transactionTable.containsText(text);
+    }
 }

@@ -104,15 +104,17 @@ public final class TestDataFactory {
     }
 
     public static AIAccountantChatRequest validChatRequest() {
+        return chatRequest("Які мої основні витрати цього місяця?");
+    }
+
+    public static AIAccountantChatRequest chatRequest(String message) {
         AIAccountantChatRequest request = new AIAccountantChatRequest();
-        request.setMessage("Які мої основні витрати цього місяця?");
+        request.setMessage(message);
         return request;
     }
 
     public static AIAccountantChatRequest invalidChatRequest() {
-        AIAccountantChatRequest request = new AIAccountantChatRequest();
-        request.setMessage("");
-        return request;
+        return chatRequest("");
     }
 
     public static File sampleImportCsv() {

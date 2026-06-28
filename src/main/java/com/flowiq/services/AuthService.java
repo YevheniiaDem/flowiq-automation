@@ -5,6 +5,8 @@ import com.flowiq.clients.ApiCallResult;
 import com.flowiq.clients.ApiResponse;
 import com.flowiq.clients.BaseResponseSpecification;
 import com.flowiq.constants.ApiEndpoints;
+import com.flowiq.constants.SchemaPaths;
+import com.flowiq.factories.TestDataFactory;
 import com.flowiq.models.request.LoginRequest;
 import com.flowiq.models.request.RegisterRequest;
 import com.flowiq.models.response.AuthResponse;
@@ -20,7 +22,7 @@ public class AuthService extends BaseApiService {
     public AuthResponse login(LoginRequest request) {
         ApiResponse response = postPublic(ApiEndpoints.AUTH_LOGIN, request);
         BaseResponseSpecification.validate(response, 200);
-        JsonSchemaValidator.validate(response, "auth-login-response-schema.json");
+        JsonSchemaValidator.validate(response, SchemaPaths.AUTH_LOGIN_LEGACY);
         AuthResponse authResponse = response.as(AuthResponse.class);
         TokenManager.save(authResponse);
         log.info("Authenticated as: {}", authResponse.getUser().getEmail());
@@ -29,10 +31,7 @@ public class AuthService extends BaseApiService {
 
     @Step("Login as {email}")
     public AuthResponse login(String email, String password) {
-        LoginRequest request = new LoginRequest();
-        request.setEmail(email);
-        request.setPassword(password);
-        return login(request);
+        return login(TestDataFactory.loginRequest(email, password));
     }
 
     @Step("Register user {request.email}")
