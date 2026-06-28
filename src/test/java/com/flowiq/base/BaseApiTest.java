@@ -15,7 +15,9 @@ import com.flowiq.services.DashboardService;
 import com.flowiq.services.ForecastService;
 import com.flowiq.services.ImportService;
 import com.flowiq.services.NotificationService;
+import com.flowiq.services.ProfileService;
 import com.flowiq.services.ReportService;
+import com.flowiq.services.SettingsService;
 import com.flowiq.services.TaskService;
 import com.flowiq.services.TransactionService;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +39,8 @@ public abstract class BaseApiTest {
     protected ForecastService forecastService;
     protected BusinessGuideService businessGuideService;
     protected AIAccountantService aiAccountantService;
+    protected ProfileService profileService;
+    protected SettingsService settingsService;
 
     @BeforeClass(alwaysRun = true)
     public void setUpApiTests() {
@@ -52,6 +56,8 @@ public abstract class BaseApiTest {
         forecastService = new ForecastService();
         businessGuideService = new BusinessGuideService();
         aiAccountantService = new AIAccountantService();
+        profileService = new ProfileService();
+        settingsService = new SettingsService();
         ApiClientFactory.baseSpec();
         log.info("API test setup completed for environment: {}", config.env());
     }

@@ -151,6 +151,10 @@ public abstract class BaseApiService {
         return BaseResponseSpecification.extractCreated(post(path, body), type);
     }
 
+    protected <T> T putOk(String path, Object body, Class<T> type) {
+        return BaseResponseSpecification.extractOk(put(path, body), type);
+    }
+
     protected <T> ApiCallResult<T> fetch(String path, Class<T> bodyType) {
         return ApiCallResult.from(get(path), bodyType);
     }

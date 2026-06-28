@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="Flowiq API Contract Suite" parallel="false" verbose="1">
+<suite name="Flowiq API Contract Suite" parallel="methods" thread-count="3" verbose="1">
     <listeners>
         <listener class-name="com.flowiq.listeners.AllureListener"/>
         <listener class-name="com.flowiq.listeners.TestExecutionListener"/>
+        <listener class-name="com.flowiq.listeners.InfrastructureRetryTransformer"/>
     </listeners>
 
     <test name="API Contract Tests">
@@ -14,6 +15,9 @@
         </groups>
         <packages>
             <package name="com.flowiq.contracts.auth"/>
+            <package name="com.flowiq.contracts.dashboard"/>
+            <package name="com.flowiq.contracts.profile"/>
+            <package name="com.flowiq.contracts.imports"/>
             <package name="com.flowiq.contracts.transactions"/>
             <package name="com.flowiq.contracts.analytics"/>
             <package name="com.flowiq.contracts.reports"/>

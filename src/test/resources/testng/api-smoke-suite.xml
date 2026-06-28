@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="Flowiq API Smoke Suite" parallel="false" verbose="1">
+<suite name="Flowiq API Smoke Suite" parallel="methods" thread-count="4" verbose="1">
     <listeners>
         <listener class-name="com.flowiq.listeners.AllureListener"/>
         <listener class-name="com.flowiq.listeners.TestExecutionListener"/>
+        <listener class-name="com.flowiq.listeners.InfrastructureRetryTransformer"/>
     </listeners>
 
     <test name="API Smoke Tests">
@@ -15,6 +16,8 @@
         </groups>
         <classes>
             <class name="com.flowiq.api.auth.AuthSmokeApiTest"/>
+            <class name="com.flowiq.api.dashboard.DashboardSmokeApiTest"/>
+            <class name="com.flowiq.api.profile.ProfileSmokeApiTest"/>
             <class name="com.flowiq.api.transactions.TransactionsSmokeApiTest"/>
             <class name="com.flowiq.api.imports.ImportsSmokeApiTest"/>
             <class name="com.flowiq.api.reports.ReportsSmokeApiTest"/>

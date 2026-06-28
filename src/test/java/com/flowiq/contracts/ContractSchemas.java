@@ -6,6 +6,13 @@ public final class ContractSchemas {
 
     public static final String AUTH_LOGIN = BASE + "auth/login-response.schema.json";
     public static final String AUTH_REGISTER = BASE + "auth/register-response.schema.json";
+    public static final String AUTH_ME = BASE + "auth/me-response.schema.json";
+
+    public static final String DASHBOARD_STATS = BASE + "dashboard/stats-response.schema.json";
+
+    public static final String PROFILE = BASE + "profile/profile-response.schema.json";
+
+    public static final String IMPORTS_LIST = BASE + "imports/list-response.schema.json";
 
     public static final String TRANSACTIONS_PAGE = BASE + "transactions/page-response.schema.json";
     public static final String TRANSACTIONS_SUMMARY = BASE + "transactions/summary-response.schema.json";

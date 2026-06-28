@@ -7,6 +7,7 @@ import com.flowiq.models.response.AuthResponse;
 import com.flowiq.services.AuthService;
 import com.flowiq.support.TestCleanupManager;
 import com.flowiq.utils.JsonUtils;
+import com.flowiq.utils.OnboardingUiHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -40,6 +41,23 @@ public abstract class AuthenticatedUiTest extends BaseUiTest {
     }
 
     protected void injectAuthIntoBrowser(AuthResponse authResponse) {
+        page.navigate("/");
+        String userJson = JsonUtils.toJson(authResponse.getUser());
+        page.evaluate(
+                "([token, refreshToken, userJson]) => {"
+                        + "localStorage.setItem('token', token);"
+                        + "localStorage.setItem('refreshToken', refreshToken);"
+                        + "localStorage.setItem('user', userJson);"
+                        + "}",
+                new Object[]{authResponse.getToken(), authResponse.getRefreshToken(), userJson}
+        );
+        page.reload();
+        OnboardingUiHelper.dismissOverlays(page);
+        page.reload();
+        UiAssertions.waitForPageLoad(page);
+    }
+
+    protected void injectAuthWithoutOnboardingDismissal(AuthResponse authResponse) {
         page.navigate("/");
         String userJson = JsonUtils.toJson(authResponse.getUser());
         page.evaluate(

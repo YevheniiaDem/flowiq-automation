@@ -323,12 +323,22 @@ jobs:
         env:
           TEST_USER_EMAIL: demo@flowiq.ai
           TEST_USER_PASSWORD: demo123
-          TARGET_DIR: target/ui-regression
         run: |
           chmod +x .github/scripts/ci/*.sh
-          .github/scripts/ci/run-test-profile.sh ui-smoke
+          TARGET_DIR=target/ui-smoke .github/scripts/ci/run-test-profile.sh ui-smoke
+          TARGET_DIR=target/ui-regression .github/scripts/ci/run-test-profile.sh ui-regression
 
-      - name: Upload suite artifacts
+      - name: Upload UI smoke artifacts
+        if: always()
+        uses: ./.github/actions/upload-suite-artifacts
+        with:
+          suite-id: ui-smoke
+          target-dir: target/ui-smoke
+          artifact-prefix: ${{ env.ARTIFACT_PREFIX }}
+          retention-days: ${{ env.ALLURE_RETENTION_DAYS }}
+          include-playwright: 'true'
+
+      - name: Upload UI regression artifacts
         if: always()
         uses: ./.github/actions/upload-suite-artifacts
         with:
@@ -417,7 +427,7 @@ jobs:
     needs: build-environment
     if: ${{ needs.build-environment.result == 'success' && (env.SELECTED_SUITE == 'full' || env.SELECTED_SUITE == 'security') }}
     runs-on: ${{ vars.CI_RUNNER_LABELS || 'ubuntu-latest' }}
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout automation
@@ -425,21 +435,52 @@ jobs:
         with:
           ref: ${{ env.AUTOMATION_REF }}
 
-      - name: Security suite placeholder
-        id: tests
-        run: |
-          mkdir -p target/security
-          echo "Security Maven profile (-Psecurity) is not implemented yet." > target/security/placeholder.log
-          echo "::warning::Security suite placeholder — no tests executed."
-
-      - name: Upload placeholder log
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Setup test runner
+        uses: ./.github/actions/setup-ci-test-runner
         with:
-          name: ${{ env.ARTIFACT_PREFIX }}-security-placeholder
-          path: target/security/placeholder.log
-          retention-days: 7
-          if-no-files-found: warn
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Ensure CI stack
+        uses: ./.github/actions/ensure-ci-stack
+        with:
+          compose-file: ${{ env.COMPOSE_FILE }}
+          compose-project-name: ${{ env.COMPOSE_PROJECT_NAME }}
+          compose-profiles: ${{ env.COMPOSE_PROFILES }}
+          stack-metadata-artifact-name: ${{ env.STACK_METADATA_ARTIFACT }}
+          images-artifact-name: ${{ env.CI_IMAGES_ARTIFACT }}
+
+      - name: Run security tests
+        id: tests
+        env:
+          TEST_USER_EMAIL: demo@flowiq.ai
+          TEST_USER_PASSWORD: demo123
+          TARGET_DIR: target/security
+        run: |
+          chmod +x .github/scripts/ci/*.sh
+          .github/scripts/ci/run-test-profile.sh security
+
+      - name: Upload security artifacts
+        if: always()
+        uses: ./.github/actions/upload-suite-artifacts
+        with:
+          suite-id: security
+          target-dir: target/security
+          artifact-prefix: ${{ env.ARTIFACT_PREFIX }}
+          retention-days: ${{ env.ALLURE_RETENTION_DAYS }}
+
+      - name: Teardown local stack
+        if: ${{ always() && env.CI_SHARED_STACK != 'true' }}
+        run: |
+          chmod +x .github/scripts/ci/*.sh
+          .github/scripts/ci/ci-teardown-local.sh security
+
+      - name: Upload Docker diagnostics
+        if: ${{ always() && env.CI_SHARED_STACK != 'true' }}
+        uses: ./.github/actions/upload-docker-diagnostics
+        with:
+          artifact-name: ${{ env.ARTIFACT_PREFIX }}-security-docker-diagnostics
+          artifacts-dir: ci-artifacts
+          retention-days: 14
 
   teardown-environment:
     name: Teardown Environment

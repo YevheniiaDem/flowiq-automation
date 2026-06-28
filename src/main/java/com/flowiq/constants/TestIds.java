@@ -2,6 +2,9 @@ package com.flowiq.constants;
 
 public final class TestIds {
 
+  // Register
+  public static final String REGISTER_PAGE = "register-page";
+
   // Login
   public static final String LOGIN_PAGE = "login-page";
   public static final String LOGIN_EMAIL = "login-email";
@@ -14,6 +17,8 @@ public final class TestIds {
   public static final String MAIN_CONTENT = "main-content";
 
   // Pages
+  public static final String ANALYTICS_PAGE = "analytics-page";
+  public static final String SETTINGS_PAGE = "settings-page";
   public static final String DASHBOARD_PAGE = "dashboard-page";
   public static final String TRANSACTIONS_PAGE = "transactions-page";
   public static final String IMPORTS_PAGE = "imports-page";
@@ -66,6 +71,15 @@ public final class TestIds {
 
   // Business Guide
   public static final String BUSINESS_GUIDE_SEARCH = "business-guide-search";
+
+  // Onboarding & activation
+  public static final String ONBOARDING_WELCOME_MODAL = "onboarding-welcome-modal";
+  public static final String ONBOARDING_START_TOUR_BTN = "onboarding-start-tour-btn";
+  public static final String ONBOARDING_SKIP_BTN = "onboarding-skip-btn";
+  public static final String ACTIVATION_CHECKLIST = "activation-checklist";
+  public static final String HELP_LEARN_CENTER = "help-learn-center";
+  public static final String DEMO_WORKSPACE_BANNER = "demo-workspace-banner";
+  public static final String WHATS_NEW_MODAL = "whats-new-modal";
 
   // AI Accountant
   public static final String AI_ACCOUNTANT_CHAT = "ai-accountant-chat";

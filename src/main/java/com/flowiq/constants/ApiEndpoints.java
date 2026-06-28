@@ -80,6 +80,15 @@ public final class ApiEndpoints {
     public static final String BUSINESS_GUIDE_SEARCH = "/business-guide/search";
     public static final String BUSINESS_GUIDE_DASHBOARD_SNAPSHOT = "/business-guide/dashboard-snapshot";
 
+    // Profile & Settings
+    public static final String PROFILE = "/profile";
+    public static final String PROFILE_FOP = "/profile/fop";
+    public static final String PROFILE_SESSIONS = "/profile/sessions";
+    public static final String PROFILE_CHANGE_PASSWORD = "/profile/change-password";
+    public static final String PROFILE_SESSIONS_LOGOUT_CURRENT = "/profile/sessions/logout-current";
+    public static final String PROFILE_SESSIONS_LOGOUT_ALL = "/profile/sessions/logout-all";
+    public static final String SETTINGS_NOTIFICATIONS = "/settings/notifications";
+
     // AI Accountant
     public static final String AI_ACCOUNTANT_HEALTH = "/ai-accountant/health";
     public static final String AI_ACCOUNTANT_RECOMMENDATIONS = "/ai-accountant/recommendations";

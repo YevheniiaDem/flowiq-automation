@@ -44,4 +44,15 @@ public class AuthContractTest extends BaseContractTest {
         ContractAssertions.assertAllRequired(result, 201, ContractSchemas.AUTH_REGISTER,
                 "token", "user", "user.email");
     }
+
+    @Test(groups = {"contract", "auth", "profile"})
+    @Story("GET /api/auth/me")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Current user response matches auth/me contract schema")
+    public void meResponseShouldMatchContract() {
+        authService.login(TestDataFactory.defaultLoginRequest());
+        ApiCallResult<com.flowiq.models.response.UserResponse> result = authService.fetchMe();
+
+        ContractAssertions.assertAllRequired(result, 200, ContractSchemas.AUTH_ME, "email");
+    }
 }

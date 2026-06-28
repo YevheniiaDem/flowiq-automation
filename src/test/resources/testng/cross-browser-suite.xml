@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Flowiq Cross-Browser UI Smoke Suite" parallel="false" verbose="1">
+    <listeners>
+        <listener class-name="com.flowiq.listeners.AllureListener"/>
+        <listener class-name="com.flowiq.listeners.TestExecutionListener"/>
+        <listener class-name="com.flowiq.listeners.InfrastructureRetryTransformer"/>
+    </listeners>
+
+    <test name="Cross-Browser UI Smoke">
+        <groups>
+            <run>
+                <include name="ui-smoke"/>
+            </run>
+        </groups>
+        <packages>
+            <package name="com.flowiq.ui.smoke"/>
+        </packages>
+    </test>
+</suite>

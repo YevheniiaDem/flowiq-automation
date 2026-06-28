@@ -421,6 +421,32 @@
             </properties>
         </profile>
         <profile>
+            <id>ui-regression</id>
+            <properties>
+                <suite>ui-regression-suite.xml</suite>
+            </properties>
+        </profile>
+        <profile>
+            <id>security</id>
+            <properties>
+                <suite>security-suite.xml</suite>
+            </properties>
+        </profile>
+        <profile>
+            <id>cross-browser-firefox</id>
+            <properties>
+                <suite>cross-browser-suite.xml</suite>
+                <browser>firefox</browser>
+            </properties>
+        </profile>
+        <profile>
+            <id>cross-browser-webkit</id>
+            <properties>
+                <suite>cross-browser-suite.xml</suite>
+                <browser>webkit</browser>
+            </properties>
+        </profile>
+        <profile>
             <id>ui-headed</id>
             <properties>
                 <env>local-headed</env>

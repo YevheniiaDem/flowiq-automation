@@ -4,6 +4,7 @@
     <listeners>
         <listener class-name="com.flowiq.listeners.AllureListener"/>
         <listener class-name="com.flowiq.listeners.TestExecutionListener"/>
+        <listener class-name="com.flowiq.listeners.InfrastructureRetryTransformer"/>
     </listeners>
 
     <test name="E2E Flow Tests">

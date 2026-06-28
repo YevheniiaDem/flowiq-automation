@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProfileResponse",
+  "type": "object",
+  "required": ["email"],
+  "properties": {
+    "id": { "type": ["string", "null"] },
+    "email": { "type": "string", "format": "email" },
+    "firstName": { "type": ["string", "null"] },
+    "lastName": { "type": ["string", "null"] },
+    "name": { "type": ["string", "null"] },
+    "company": { "type": ["string", "null"] },
+    "role": { "type": ["string", "null"] }
+  },
+  "additionalProperties": true
+}

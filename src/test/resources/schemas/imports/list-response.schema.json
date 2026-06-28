@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ImportListResponse",
+  "type": "object",
+  "properties": {
+    "content": { "type": "array" },
+    "totalElements": { "type": ["integer", "number"] }
+  },
+  "additionalProperties": true
+}

@@ -70,4 +70,16 @@ public class AuthSmokeApiTest extends BaseApiTest {
         ApiAssertions.assertStatusCode(result, 200);
         ApiAssertions.assertMatchesSchema(result, SmokeSchemas.AUTH_LOGIN);
     }
+
+    @Test(groups = {"smoke", "api", "auth", "registration"})
+    @Story("Registration flow")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("New user registration returns JWT")
+    public void shouldRegisterNewUser() {
+        ApiCallResult<AuthResponse> result = authService.attemptRegister(TestDataFactory.randomRegisterRequest());
+
+        ApiAssertions.assertStatusCode(result, 201);
+        assertThat(result.getBody().getToken()).isNotBlank();
+        authService.logout();
+    }
 }

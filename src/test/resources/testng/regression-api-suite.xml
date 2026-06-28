@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="Flowiq API Regression Suite" parallel="false" verbose="1">
+<suite name="Flowiq API Regression Suite" parallel="methods" thread-count="4" verbose="1">
     <listeners>
         <listener class-name="com.flowiq.listeners.AllureListener"/>
         <listener class-name="com.flowiq.listeners.TestExecutionListener"/>
+        <listener class-name="com.flowiq.listeners.InfrastructureRetryTransformer"/>
     </listeners>
 
     <test name="API Regression Tests">
@@ -24,6 +25,7 @@
             <package name="com.flowiq.api.regression.forecasts"/>
             <package name="com.flowiq.api.regression.businessguide"/>
             <package name="com.flowiq.api.regression.aiaccountant"/>
+            <package name="com.flowiq.api.regression.profile"/>
         </packages>
     </test>
 </suite>

@@ -47,4 +47,20 @@ public class Pages {
   public AIAccountantPage aiAccountant() {
     return new AIAccountantPage(page);
   }
+
+  public RegisterPage register() {
+    return new RegisterPage(page);
+  }
+
+  public AnalyticsPage analytics() {
+    return new AnalyticsPage(page);
+  }
+
+  public SettingsPage settings() {
+    return new SettingsPage(page);
+  }
+
+  public OnboardingPage onboarding() {
+    return new OnboardingPage(page);
+  }
 }
