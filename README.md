@@ -1,6 +1,8 @@
 # Flowiq Test Automation Framework
 
-Production-ready API and UI test automation framework for the Flowiq platform.
+Production-ready API and UI test automation for the FlowIQ platform.
+
+**Platform docs:** [Developer Handbook](https://github.com/YevheniiaDem/flowiq-backend/blob/main/docs/DEVELOPER_HANDBOOK.md) (flowiq-backend) · [Contributing](https://github.com/YevheniiaDem/flowiq-backend/blob/main/CONTRIBUTING.md)
 
 ## Tech Stack
 
