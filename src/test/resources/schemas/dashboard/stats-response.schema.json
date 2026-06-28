@@ -4,10 +4,13 @@
   "type": "array",
   "items": {
     "type": "object",
-    "required": ["label", "value"],
+    "required": ["labelKey", "amount", "change", "changeType", "icon"],
     "properties": {
-      "label": { "type": "string" },
-      "value": { "type": ["string", "number"] }
+      "labelKey": { "type": "string" },
+      "amount": { "type": "number" },
+      "change": { "type": "string" },
+      "changeType": { "type": "string" },
+      "icon": { "type": "string" }
     },
     "additionalProperties": true
   }
