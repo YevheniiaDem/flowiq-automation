@@ -61,7 +61,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ github.token }}
 
     - name: Start stack from cached images
       if: steps.reuse.outputs.reuse != 'true'

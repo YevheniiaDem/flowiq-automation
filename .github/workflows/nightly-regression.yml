@@ -16,7 +16,7 @@ on:
       frontend_ref:
         description: Frontend branch or tag
         required: false
-        default: main
+        default: master
       test_suite:
         description: Suites to run (full runs all jobs in parallel)
         required: true
@@ -61,7 +61,7 @@ env:
   BACKEND_REPOSITORY: ${{ vars.BACKEND_REPOSITORY || 'YevheniiaDem/flowiq-backend' }}
   FRONTEND_REPOSITORY: ${{ vars.FRONTEND_REPOSITORY || 'YevheniiaDem/flowiq-frontend' }}
   BACKEND_REF: ${{ github.event.inputs.backend_ref || 'main' }}
-  FRONTEND_REF: ${{ github.event.inputs.frontend_ref || 'main' }}
+  FRONTEND_REF: ${{ github.event.inputs.frontend_ref || 'master' }}
   AUTOMATION_REF: ${{ github.event.inputs.automation_ref || github.ref_name }}
   SELECTED_SUITE: ${{ github.event.inputs.test_suite || 'full' }}
   COMPOSE_PROFILES: ${{ github.event.inputs.optional_services || '' }}
