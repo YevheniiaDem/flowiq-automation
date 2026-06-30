@@ -2,6 +2,7 @@ package com.flowiq.base;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.PlaywrightException;
 import com.microsoft.playwright.options.LoadState;
 import org.assertj.core.api.Assertions;
 
@@ -46,7 +47,11 @@ public final class UiAssertions {
 
     public static void waitForPageLoad(Page page) {
         page.waitForLoadState(LoadState.DOMCONTENTLOADED);
-        page.waitForLoadState(LoadState.NETWORKIDLE);
+        try {
+            page.waitForLoadState(LoadState.NETWORKIDLE, new Page.WaitForLoadStateOptions().setTimeout(5_000));
+        } catch (PlaywrightException ignored) {
+            // SPA may keep long-polling connections open in CI.
+        }
     }
 
     public static void waitUntilVisible(Locator locator, long timeoutSeconds) {

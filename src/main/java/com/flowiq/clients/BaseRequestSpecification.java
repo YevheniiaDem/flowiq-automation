@@ -63,6 +63,13 @@ public final class BaseRequestSpecification {
                 .build();
     }
 
+    public static RequestSpecification multipartUnauthenticated() {
+        return new RequestSpecBuilder()
+                .addRequestSpecification(base())
+                .setContentType("multipart/form-data")
+                .build();
+    }
+
     public static void reset() {
         baseSpec = null;
     }

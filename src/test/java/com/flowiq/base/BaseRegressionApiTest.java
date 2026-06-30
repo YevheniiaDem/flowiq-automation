@@ -9,9 +9,7 @@ public abstract class BaseRegressionApiTest extends BaseSmokeApiTest {
     @BeforeMethod(alwaysRun = true)
     public void prepareRegressionTest() {
         TestCleanupManager.clear();
-        if (!com.flowiq.auth.TokenManager.isAuthenticated()) {
-            loginAsDefaultUser();
-        }
+        ensureAuthenticated();
     }
 
     @AfterMethod(alwaysRun = true)

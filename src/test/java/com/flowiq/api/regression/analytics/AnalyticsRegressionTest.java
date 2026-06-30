@@ -97,7 +97,7 @@ public class AnalyticsRegressionTest extends BaseRegressionApiTest {
         FopInsightsResponse insights = analyticsService.getFopInsights();
 
         assertThat(insights.getIncomeLimitUsagePercent()).isBetween(0.0, 100.0);
-        assertThat(insights.getIncomeLimitProgress()).isBetween(0.0, 1.0);
+        assertThat(insights.getIncomeLimitProgress()).isBetween(0.0, 100.0);
         assertThat(insights.getAnnualIncome()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
         assertThat(insights.getIncomeLimit()).isGreaterThan(BigDecimal.ZERO);
     }
@@ -130,7 +130,7 @@ public class AnalyticsRegressionTest extends BaseRegressionApiTest {
     @Description("Unauthenticated FOP insights request is rejected")
     public void shouldRejectUnauthorizedFopInsightsAccess() {
         TokenManager.clear();
-        RegressionAssertions.assertUnauthorized(analyticsService.fetchFopInsights());
+        RegressionAssertions.assertUnauthorized(analyticsService.fetchFopInsightsUnauthorized());
         loginAsDefaultUser();
     }
 

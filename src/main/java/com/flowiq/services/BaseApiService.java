@@ -78,6 +78,11 @@ public abstract class BaseApiService {
         return ApiRequestExecutor.postMultipart(multipartSpec(), path, file);
     }
 
+    @Step("POST multipart {path} (unauthenticated)")
+    protected ApiResponse postMultipartUnauthenticated(String path, File file) {
+        return ApiRequestExecutor.postMultipart(multipartUnauthenticatedSpec(), path, file);
+    }
+
     protected <T> List<T> getList(String path, Class<T> itemType) {
         return get(path).jsonPath().getList("", itemType);
     }
@@ -126,6 +131,26 @@ public abstract class BaseApiService {
         return ApiCallResult.from(post(path, body), bodyType);
     }
 
+    protected <T> ApiCallResult<T> attemptPostUnauthorized(String path, Object body, Class<T> bodyType) {
+        return ApiCallResult.from(postUnauthenticated(path, body), bodyType);
+    }
+
+    protected <T> ApiCallResult<T> attemptPutUnauthorized(String path, Object body, Class<T> bodyType) {
+        return ApiCallResult.from(putUnauthenticated(path, body), bodyType);
+    }
+
+    protected <T> ApiCallResult<T> attemptPutUnauthorized(String path, Class<T> bodyType) {
+        return ApiCallResult.from(putUnauthenticated(path), bodyType);
+    }
+
+    protected ApiResponse putUnauthenticated(String path, Object body) {
+        return ApiRequestExecutor.put(baseSpec(), path, body);
+    }
+
+    protected ApiResponse putUnauthenticated(String path) {
+        return ApiRequestExecutor.put(baseSpec(), path);
+    }
+
     protected <T> ApiCallResult<T> attemptGet(String path, Class<T> bodyType) {
         return ApiCallResult.from(get(path), bodyType);
     }
@@ -164,5 +189,9 @@ public abstract class BaseApiService {
 
     private RequestSpecification multipartSpec() {
         return BaseRequestSpecification.multipart();
+    }
+
+    private RequestSpecification multipartUnauthenticatedSpec() {
+        return BaseRequestSpecification.multipartUnauthenticated();
     }
 }

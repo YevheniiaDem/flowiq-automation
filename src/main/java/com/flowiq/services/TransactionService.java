@@ -75,6 +75,11 @@ public class TransactionService extends BaseApiService {
         return fetch(ApiEndpoints.TRANSACTIONS_SUMMARY, Map.of(), TransactionSummaryResponse.class);
     }
 
+    @Step("Fetch transaction summary without authentication")
+    public ApiCallResult<TransactionSummaryResponse> fetchSummaryUnauthorized() {
+        return fetchUnauthenticated(ApiEndpoints.TRANSACTIONS_SUMMARY, Map.of(), TransactionSummaryResponse.class);
+    }
+
     @Step("Fetch transactions without authentication")
     public ApiCallResult<TransactionPageResponse> fetchListUnauthorized() {
         return fetchUnauthenticated(ApiEndpoints.TRANSACTIONS,
@@ -87,9 +92,20 @@ public class TransactionService extends BaseApiService {
         return attemptPost(ApiEndpoints.TRANSACTIONS, request, TransactionResponse.class);
     }
 
+    @Step("Attempt create transaction without authentication")
+    public ApiCallResult<TransactionResponse> attemptCreateUnauthorized(CreateTransactionRequest request) {
+        return attemptPostUnauthorized(ApiEndpoints.TRANSACTIONS, request, TransactionResponse.class);
+    }
+
     @Step("Fetch transaction by id {id} (unchecked)")
     public ApiCallResult<TransactionResponse> fetchById(long id) {
         return attemptGet(ApiEndpoints.withPathParam(ApiEndpoints.TRANSACTION_BY_ID, "id", id), TransactionResponse.class);
+    }
+
+    @Step("Fetch transaction by id {id} without authentication")
+    public ApiCallResult<TransactionResponse> fetchByIdUnauthorized(long id) {
+        return fetchUnauthenticated(ApiEndpoints.withPathParam(ApiEndpoints.TRANSACTION_BY_ID, "id", id),
+                TransactionResponse.class);
     }
 
     @Step("Attempt update transaction {id}")

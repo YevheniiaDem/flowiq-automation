@@ -8,7 +8,9 @@ import com.flowiq.models.response.AuthResponse;
 import com.flowiq.services.AuthService;
 import com.flowiq.support.TestCleanupManager;
 import com.flowiq.utils.JsonUtils;
-import com.flowiq.utils.OnboardingUiHelper;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.options.LoadState;
+import com.microsoft.playwright.options.WaitUntilState;
 import lombok.extern.slf4j.Slf4j;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -42,28 +44,41 @@ public abstract class AuthenticatedUiTest extends BaseUiTest {
     }
 
     protected void injectAuthIntoBrowser(AuthResponse authResponse) {
-        storeAuthInBrowser(authResponse);
-        OnboardingUiHelper.dismissOverlays(page);
-        page.reload();
+        storeAuthInBrowser(authResponse, true);
         UiAssertions.waitForPageLoad(page);
     }
 
     protected void injectAuthWithoutOnboardingDismissal(AuthResponse authResponse) {
-        storeAuthInBrowser(authResponse);
+        storeAuthInBrowser(authResponse, false);
         UiAssertions.waitForPageLoad(page);
     }
 
-    private void storeAuthInBrowser(AuthResponse authResponse) {
-        page.navigate("/");
+    private void storeAuthInBrowser(AuthResponse authResponse, boolean dismissOnboarding) {
+        page.navigate("/", new Page.NavigateOptions().setWaitUntil(WaitUntilState.COMMIT));
         String userJson = JsonUtils.toJson(authResponse.getUser());
         page.evaluate(
-                "([token, refreshToken, userJson]) => {"
+                "([token, refreshToken, userJson, dismissOnboarding]) => {"
                         + "localStorage.setItem('token', token);"
                         + "localStorage.setItem('refreshToken', refreshToken);"
                         + "localStorage.setItem('user', userJson);"
+                        + "if (dismissOnboarding) {"
+                        + "localStorage.setItem('onboarding_completed', 'true');"
+                        + "localStorage.setItem('onboarding_skipped', 'true');"
+                        + "localStorage.removeItem('onboarding_pending');"
+                        + "localStorage.setItem('onboarding_whats_new_version', '999');"
+                        + "localStorage.setItem('onboarding_checklist_dismissed', 'true');"
+                        + "localStorage.setItem('onboarding_demo_workspace', 'false');"
+                        + "sessionStorage.removeItem('onboarding_tour_step');"
+                        + "}"
                         + "}",
-                new Object[]{authResponse.getToken(), authResponse.getRefreshToken(), userJson}
+                new Object[]{
+                        authResponse.getToken(),
+                        authResponse.getRefreshToken() != null ? authResponse.getRefreshToken() : "",
+                        userJson,
+                        dismissOnboarding
+                }
         );
-        page.reload();
+        page.navigate("/", new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
     }
 }

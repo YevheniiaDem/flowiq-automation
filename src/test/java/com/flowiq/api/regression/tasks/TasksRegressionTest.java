@@ -222,7 +222,7 @@ public class TasksRegressionTest extends BaseRegressionApiTest {
     public void shouldRejectUnauthorizedCreateAccess() {
         TokenManager.clear();
         RegressionAssertions.assertUnauthorized(
-                taskService.attemptCreate(TaskRequestBuilder.custom().uniqueTitle().dueTomorrow().build()));
+                taskService.attemptCreateUnauthorized(TaskRequestBuilder.custom().uniqueTitle().dueTomorrow().build()));
         loginAsDefaultUser();
     }
 
@@ -236,7 +236,7 @@ public class TasksRegressionTest extends BaseRegressionApiTest {
         TestCleanupManager.registerTaskCleanup(taskService, created.getId());
 
         TokenManager.clear();
-        RegressionAssertions.assertUnauthorized(taskService.attemptComplete(created.getId()));
+        RegressionAssertions.assertUnauthorized(taskService.attemptCompleteUnauthorized(created.getId()));
         loginAsDefaultUser();
     }
 

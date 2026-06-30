@@ -51,6 +51,11 @@ public class NotificationService extends BaseApiService {
         return attemptPut(ApiEndpoints.NOTIFICATIONS_READ_ALL, Void.class);
     }
 
+    @Step("Attempt mark all notifications as read without authentication")
+    public ApiCallResult<Void> attemptMarkAllAsReadUnauthorized() {
+        return attemptPutUnauthorized(ApiEndpoints.NOTIFICATIONS_READ_ALL, Void.class);
+    }
+
     @Step("Delete notification {id}")
     public void deleteById(long id) {
         deleteNoContent(ApiEndpoints.withPathParam(ApiEndpoints.NOTIFICATION_BY_ID, "id", id));

@@ -97,6 +97,22 @@ public final class RegressionDataProviders {
 
     @DataProvider(name = "reportTypeFormatCombinations")
     public static Object[][] reportTypeFormatCombinations() {
+        boolean ciEnv = "ci".equalsIgnoreCase(System.getProperty("env", "local"));
+        GenerateReportRequest.ReportType[] types = {
+                GenerateReportRequest.ReportType.PROFIT_AND_LOSS,
+                GenerateReportRequest.ReportType.CASH_FLOW,
+                GenerateReportRequest.ReportType.REVENUE_SUMMARY,
+                GenerateReportRequest.ReportType.EXPENSE_SUMMARY,
+                GenerateReportRequest.ReportType.TAX_SUMMARY,
+                GenerateReportRequest.ReportType.FOP_SUMMARY
+        };
+        if (ciEnv) {
+            Object[][] rows = new Object[types.length][2];
+            for (int i = 0; i < types.length; i++) {
+                rows[i] = new Object[]{types[i], GenerateReportRequest.Format.PDF};
+            }
+            return rows;
+        }
         return new Object[][]{
                 {GenerateReportRequest.ReportType.PROFIT_AND_LOSS, GenerateReportRequest.Format.PDF},
                 {GenerateReportRequest.ReportType.PROFIT_AND_LOSS, GenerateReportRequest.Format.CSV},

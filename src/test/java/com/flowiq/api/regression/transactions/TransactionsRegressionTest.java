@@ -313,7 +313,7 @@ public class TransactionsRegressionTest extends BaseRegressionApiTest {
     public void shouldRejectUnauthorizedGetById() {
         long transactionId = createTrackedTransaction().getId();
         TokenManager.clear();
-        RegressionAssertions.assertUnauthorized(transactionService.fetchById(transactionId));
+        RegressionAssertions.assertUnauthorized(transactionService.fetchByIdUnauthorized(transactionId));
         loginAsDefaultUser();
     }
 
@@ -323,7 +323,7 @@ public class TransactionsRegressionTest extends BaseRegressionApiTest {
     @Description("Unauthenticated transaction summary request is rejected")
     public void shouldRejectUnauthorizedSummaryAccess() {
         TokenManager.clear();
-        RegressionAssertions.assertUnauthorized(transactionService.fetchSummary());
+        RegressionAssertions.assertUnauthorized(transactionService.fetchSummaryUnauthorized());
         loginAsDefaultUser();
     }
 
@@ -334,7 +334,7 @@ public class TransactionsRegressionTest extends BaseRegressionApiTest {
     public void shouldRejectUnauthorizedCreateAccess() {
         TokenManager.clear();
         RegressionAssertions.assertUnauthorized(
-                transactionService.attemptCreate(TransactionRequestBuilder.expense().uniqueDescription().today().build()));
+                transactionService.attemptCreateUnauthorized(TransactionRequestBuilder.expense().uniqueDescription().today().build()));
         loginAsDefaultUser();
     }
 

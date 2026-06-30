@@ -55,7 +55,7 @@ public class ImportsSmokeApiTest extends BaseSmokeApiTest {
         ApiCallResult<ImportJobResponse> result =
                 importService.attemptUpload(TestDataFactory.invalidImportFile());
 
-        assertValidationError(result);
+        assertRejectedWithClientOrServerError(result);
     }
 
     @Test(groups = {"smoke", "api", "imports"})

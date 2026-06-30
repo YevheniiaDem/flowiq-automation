@@ -53,6 +53,11 @@ public class ReportService extends BaseApiService {
         return attemptPost(ApiEndpoints.REPORTS_GENERATE, request, ReportJobResponse.class);
     }
 
+    @Step("Attempt generate report without authentication")
+    public ApiCallResult<ReportJobResponse> attemptGenerateUnauthorized(GenerateReportRequest request) {
+        return attemptPostUnauthorized(ApiEndpoints.REPORTS_GENERATE, request, ReportJobResponse.class);
+    }
+
     @Step("Fetch report preview (unchecked)")
     public ApiCallResult<ReportPreviewResponse> fetchPreview(Map<String, ?> queryParams) {
         return fetch(ApiEndpoints.REPORTS_PREVIEW, queryParams, ReportPreviewResponse.class);

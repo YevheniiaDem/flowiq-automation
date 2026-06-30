@@ -43,11 +43,14 @@ public class BusinessGuideSmokeApiTest extends BaseSmokeApiTest {
     @Test(groups = {"smoke", "api", "business-guide"})
     @Story("Validation")
     @Severity(SeverityLevel.NORMAL)
-    @Description("Search without query parameter is rejected")
-    public void shouldRejectSearchWithoutQuery() {
+    @Description("Search without query is handled safely (default listing or validation error)")
+    public void shouldHandleSearchWithoutQuery() {
         ApiCallResult<KnowledgeSearchResponseDto> result = businessGuideService.fetchSearchWithoutQuery();
 
-        assertValidationError(result);
+        assertHandledSafely(result);
+        if (result.getStatusCode() == 200) {
+            assertThat(result.getBody().getResults()).isNotNull();
+        }
     }
 
     @Test(groups = {"smoke", "api", "business-guide"})

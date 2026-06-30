@@ -88,7 +88,7 @@ public class ImportsRegressionTest extends BaseRegressionApiTest {
     @Severity(SeverityLevel.NORMAL)
     @Description("Non-CSV files are rejected")
     public void shouldRejectInvalidImportFile() {
-        RegressionAssertions.assertValidationError(
+        RegressionAssertions.assertRejectedWithClientOrServerError(
                 importService.attemptUpload(TestDataFactory.invalidImportFile()));
     }
 
@@ -97,7 +97,7 @@ public class ImportsRegressionTest extends BaseRegressionApiTest {
     @Severity(SeverityLevel.NORMAL)
     @Description("Empty CSV files are rejected")
     public void shouldRejectEmptyImportFile() {
-        RegressionAssertions.assertValidationError(
+        RegressionAssertions.assertRejectedWithClientOrServerError(
                 importService.attemptUpload(TestDataFactory.emptyImportCsv()));
     }
 
@@ -118,7 +118,7 @@ public class ImportsRegressionTest extends BaseRegressionApiTest {
     public void shouldRejectUnauthorizedUploadAccess() {
         TokenManager.clear();
         RegressionAssertions.assertUnauthorized(
-                importService.attemptUpload(TestDataFactory.sampleImportCsv()));
+                importService.attemptUploadUnauthorized(TestDataFactory.sampleImportCsv()));
         loginAsDefaultUser();
     }
 

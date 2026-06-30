@@ -92,6 +92,11 @@ public class TaskService extends BaseApiService {
         return attemptPost(ApiEndpoints.TASKS, request, TaskResponse.class);
     }
 
+    @Step("Attempt create task without authentication")
+    public ApiCallResult<TaskResponse> attemptCreateUnauthorized(CreateTaskRequest request) {
+        return attemptPostUnauthorized(ApiEndpoints.TASKS, request, TaskResponse.class);
+    }
+
     @Step("Fetch grouped tasks (unchecked)")
     public ApiCallResult<TaskListResponse> fetchGrouped() {
         return fetch(ApiEndpoints.TASKS_GROUPED, TaskListResponse.class);
@@ -110,6 +115,11 @@ public class TaskService extends BaseApiService {
     @Step("Attempt complete task {id}")
     public ApiCallResult<TaskResponse> attemptComplete(long id) {
         return attemptPut(ApiEndpoints.withPathParam(ApiEndpoints.TASK_COMPLETE, "id", id), TaskResponse.class);
+    }
+
+    @Step("Attempt complete task {id} without authentication")
+    public ApiCallResult<TaskResponse> attemptCompleteUnauthorized(long id) {
+        return attemptPutUnauthorized(ApiEndpoints.withPathParam(ApiEndpoints.TASK_COMPLETE, "id", id), TaskResponse.class);
     }
 
     @Step("Attempt delete task {id}")

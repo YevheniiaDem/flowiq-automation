@@ -36,7 +36,9 @@ public class AuthService extends BaseApiService {
 
     @Step("Register user {request.email}")
     public AuthResponse register(RegisterRequest request) {
-        AuthResponse authResponse = postCreated(ApiEndpoints.AUTH_REGISTER, request, AuthResponse.class);
+        ApiResponse response = postPublic(ApiEndpoints.AUTH_REGISTER, request);
+        BaseResponseSpecification.validate(response, 201);
+        AuthResponse authResponse = response.as(AuthResponse.class);
         TokenManager.save(authResponse);
         return authResponse;
     }

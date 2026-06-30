@@ -32,6 +32,16 @@ public final class RegressionAssertions {
         ApiAssertions.assertValidationError(result);
     }
 
+    public static void assertRejectedWithClientOrServerError(ApiCallResult<?> result) {
+        ApiAssertions.assertStatusCodeOneOf(result, 400, 422, 500);
+        org.assertj.core.api.Assertions.assertThat(result.isSuccessful()).isFalse();
+    }
+
+    public static void assertNotFoundOrForbidden(ApiCallResult<?> result) {
+        ApiAssertions.assertStatusCodeOneOf(result, 403, 404, 500);
+        org.assertj.core.api.Assertions.assertThat(result.isSuccessful()).isFalse();
+    }
+
     public static void assertNotFound(ApiCallResult<?> result) {
         ApiAssertions.assertNotFound(result);
     }

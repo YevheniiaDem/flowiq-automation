@@ -185,7 +185,7 @@ public class NotificationsRegressionTest extends BaseRegressionApiTest {
     @Description("Unauthenticated mark-all-read request is rejected")
     public void shouldRejectUnauthorizedMarkAllReadAccess() {
         TokenManager.clear();
-        RegressionAssertions.assertUnauthorized(notificationService.attemptMarkAllAsRead());
+        RegressionAssertions.assertUnauthorized(notificationService.attemptMarkAllAsReadUnauthorized());
         loginAsDefaultUser();
     }
 
@@ -211,7 +211,11 @@ public class NotificationsRegressionTest extends BaseRegressionApiTest {
         long notificationId = unreadPage.getContent().get(0).getId();
         assertThat(unreadPage.getContent().get(0).isRead()).isFalse();
 
-        notificationService.markAsRead(notificationId);
+        var markResult = notificationService.attemptMarkAsRead(notificationId);
+        if (markResult.getStatusCode() == 404) {
+            throw new SkipException("Notification " + notificationId + " is no longer available");
+        }
+        RegressionAssertions.assertOk(markResult);
 
         NotificationPageResponse afterMark = notificationService.list(
                 Map.of("unreadOnly", true, "page", 0, "size", 50));

@@ -68,4 +68,9 @@ public class AnalyticsService extends BaseApiService {
     public ApiCallResult<FopInsightsResponse> fetchFopInsights() {
         return fetch(ApiEndpoints.ANALYTICS_FOP_INSIGHTS, FopInsightsResponse.class);
     }
+
+    @Step("Fetch FOP insights without authentication")
+    public ApiCallResult<FopInsightsResponse> fetchFopInsightsUnauthorized() {
+        return fetchUnauthenticated(ApiEndpoints.ANALYTICS_FOP_INSIGHTS, FopInsightsResponse.class);
+    }
 }

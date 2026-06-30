@@ -200,7 +200,7 @@ public class ReportsRegressionTest extends BaseRegressionApiTest {
     public void shouldRejectUnauthorizedGenerateAccess() {
         TokenManager.clear();
         RegressionAssertions.assertUnauthorized(
-                reportService.attemptGenerate(TestDataFactory.validReportRequest()));
+                reportService.attemptGenerateUnauthorized(TestDataFactory.validReportRequest()));
         loginAsDefaultUser();
     }
 

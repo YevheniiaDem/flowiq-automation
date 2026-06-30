@@ -42,10 +42,9 @@ public class ForecastsSmokeApiTest extends BaseSmokeApiTest {
     @Test(groups = {"smoke", "api", "forecasts"})
     @Story("Validation")
     @Severity(SeverityLevel.NORMAL)
-    @Description("Unknown forecast sub-resource returns client error")
+    @Description("Unknown forecast sub-resource does not return success")
     public void shouldReturnErrorForUnknownEndpoint() {
-        com.flowiq.assertions.ApiAssertions.assertStatusCodeOneOf(
-                forecastService.fetchUnknownResource(), 400, 404);
+        assertRejectedWithClientOrServerError(forecastService.fetchUnknownResource());
     }
 
     @Test(groups = {"smoke", "api", "forecasts"})

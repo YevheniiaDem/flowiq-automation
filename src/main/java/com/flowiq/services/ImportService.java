@@ -43,6 +43,11 @@ public class ImportService extends BaseApiService {
         return ApiCallResult.from(postMultipart(ApiEndpoints.IMPORTS_UPLOAD, file), ImportJobResponse.class);
     }
 
+    @Step("Attempt upload import file without authentication")
+    public ApiCallResult<ImportJobResponse> attemptUploadUnauthorized(File file) {
+        return ApiCallResult.from(postMultipartUnauthenticated(ApiEndpoints.IMPORTS_UPLOAD, file), ImportJobResponse.class);
+    }
+
     @Step("Fetch import job by id {id} (unchecked)")
     public ApiCallResult<ImportJobResponse> fetchById(long id) {
         return attemptGet(ApiEndpoints.withPathParam(ApiEndpoints.IMPORT_BY_ID, "id", id), ImportJobResponse.class);

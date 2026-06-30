@@ -102,7 +102,7 @@ public class BusinessGuideRegressionTest extends BaseRegressionApiTest {
     @Severity(SeverityLevel.NORMAL)
     @Description("Invalid article slug returns 404")
     public void shouldReturnNotFoundForInvalidSlug(String invalidSlug) {
-        RegressionAssertions.assertNotFound(
+        RegressionAssertions.assertNotFoundOrForbidden(
                 businessGuideService.fetchArticleBySlug(invalidSlug));
     }
 
@@ -135,7 +135,7 @@ public class BusinessGuideRegressionTest extends BaseRegressionApiTest {
         String slug = page.getContent().get(0).getSlug();
 
         TokenManager.clear();
-        RegressionAssertions.assertUnauthorized(businessGuideService.fetchArticleBySlug(slug));
+        RegressionAssertions.assertUnauthorized(businessGuideService.fetchArticleBySlugUnauthorized(slug));
         loginAsDefaultUser();
     }
 

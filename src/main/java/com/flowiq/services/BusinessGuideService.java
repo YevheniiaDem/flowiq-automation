@@ -78,6 +78,13 @@ public class BusinessGuideService extends BaseApiService {
                 KnowledgeArticleDetailDto.class);
     }
 
+    @Step("Fetch article by slug {slug} without authentication")
+    public ApiCallResult<KnowledgeArticleDetailDto> fetchArticleBySlugUnauthorized(String slug) {
+        return ApiCallResult.from(getUnauthenticated(
+                ApiEndpoints.withPathParam(ApiEndpoints.BUSINESS_GUIDE_ARTICLE_BY_SLUG, "slug", slug)),
+                KnowledgeArticleDetailDto.class);
+    }
+
     @Step("Fetch categories without authentication")
     public ApiCallResult<Void> fetchCategoriesUnauthorized() {
         return fetchUnauthenticated(ApiEndpoints.BUSINESS_GUIDE_CATEGORIES, Void.class);
