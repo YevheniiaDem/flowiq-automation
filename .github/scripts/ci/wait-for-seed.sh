@@ -20,7 +20,7 @@ for ((i = 1; i <= MAX_ATTEMPTS; i++)); do
     -H "Content-Type: application/json" \
     -d "${payload}" || true)"
 
-  if [ "${http_code}" = "200" ] && grep -q '"accessToken"' /tmp/flowiq-seed-response.json 2>/dev/null; then
+  if [ "${http_code}" = "200" ] && grep -qE '"(token|accessToken)"' /tmp/flowiq-seed-response.json 2>/dev/null; then
     echo "Demo seed verified after ${i} attempt(s)."
     exit 0
   fi

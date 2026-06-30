@@ -55,6 +55,8 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-flowiq}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-flowiq123}
       JWT_SECRET: ${JWT_SECRET:-flowiq-dev-secret-key-change-in-production-min-256-bits-long!!}
+      # docker profile disables demo seed by default; CI tests require demo@flowiq.ai
+      FLOWIQ_DEMO_SEED_ENABLED: ${FLOWIQ_DEMO_SEED_ENABLED:-true}
     networks:
       - flowiq-ci-network
     ports:
