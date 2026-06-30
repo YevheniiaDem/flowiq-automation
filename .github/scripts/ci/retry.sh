@@ -1,28 +1,35 @@
 #!/usr/bin/env bash
 # Retries flaky infrastructure commands (docker pull, compose up, etc.). Does NOT retry tests.
+# Source this file to define retry(), or execute directly: retry.sh <command> [args...]
 set -euo pipefail
 
-MAX_ATTEMPTS="${RETRY_MAX_ATTEMPTS:-5}"
-DELAY_SECONDS="${RETRY_DELAY_SECONDS:-10}"
+retry() {
+  local max_attempts="${RETRY_MAX_ATTEMPTS:-5}"
+  local delay_seconds="${RETRY_DELAY_SECONDS:-10}"
 
-if [ "$#" -lt 1 ]; then
-  echo "Usage: retry.sh <command> [args...]"
-  exit 1
+  if [ "$#" -lt 1 ]; then
+    echo "Usage: retry <command> [args...]"
+    return 1
+  fi
+
+  local attempt=1
+  while true; do
+    if "$@"; then
+      return 0
+    fi
+    local exit_code=$?
+
+    if [ "${attempt}" -ge "${max_attempts}" ]; then
+      echo "::error::Command failed after ${max_attempts} attempts (exit ${exit_code}): $*"
+      return "${exit_code}"
+    fi
+
+    echo "Attempt ${attempt}/${max_attempts} failed (exit ${exit_code}). Retrying in ${delay_seconds}s: $*"
+    sleep "${delay_seconds}"
+    attempt=$((attempt + 1))
+  done
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  retry "$@"
 fi
-
-attempt=1
-while true; do
-  if "$@"; then
-    exit 0
-  fi
-  exit_code=$?
-
-  if [ "${attempt}" -ge "${MAX_ATTEMPTS}" ]; then
-    echo "::error::Command failed after ${MAX_ATTEMPTS} attempts (exit ${exit_code}): $*"
-    exit "${exit_code}"
-  fi
-
-  echo "Attempt ${attempt}/${MAX_ATTEMPTS} failed (exit ${exit_code}). Retrying in ${DELAY_SECONDS}s: $*"
-  sleep "${DELAY_SECONDS}"
-  attempt=$((attempt + 1))
-done
